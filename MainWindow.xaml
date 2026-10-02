@@ -23,57 +23,60 @@
 
 
         <!-- =========================================================================
-             FONCTIONNALITÉ : BARRE D'OUTILS
-             ========================================================================= -->
+     FONCTIONNALITÉ : BARRE D'OUTILS
+     ========================================================================= -->
 
-        <Grid Grid.Row="0"
-              Margin="10">
+<Grid Grid.Row="0"
+      Margin="10">
 
-            <!-- =====================================================================
-                 STYLE
-                 ===================================================================== -->
+    <!-- =====================================================================
+         STYLE
+         ===================================================================== -->
 
-            <Grid.Resources>
+    <Grid.Resources>
 
-                <Style x:Key="ToolbarButtonStyle"
-                       TargetType="Button">
+        <Style x:Key="ToolbarButtonStyle"
+               TargetType="Button">
 
-                    <Setter Property="Padding"
-                            Value="10,5"/>
+            <Setter Property="Padding"
+                    Value="10,5"/>
 
-                    <Setter Property="Margin"
-                            Value="0,0,5,0"/>
+            <Setter Property="Margin"
+                    Value="0,0,5,0"/>
 
-                    <Setter Property="MinWidth"
-                            Value="90"/>
+            <Setter Property="MinWidth"
+                    Value="90"/>
 
-                </Style>
+        </Style>
 
-            </Grid.Resources>
+    </Grid.Resources>
 
 
-            <!-- =====================================================================
-                 INTERFACE
-                 ===================================================================== -->
+    <!-- =====================================================================
+         INTERFACE
+         ===================================================================== -->
 
-            <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal">
 
-                <Button Content="Actualiser"
-                        Style="{StaticResource ToolbarButtonStyle}"/>
+        <Button Content="Actualiser"
+                Style="{StaticResource ToolbarButtonStyle}"/>
 
-                <Button Content="Informations"
-                        Style="{StaticResource ToolbarButtonStyle}"/>
+        <Button Content="Informations"
+                Style="{StaticResource ToolbarButtonStyle}"/>
 
-                <Button Content="Tester"
-                        Style="{StaticResource ToolbarButtonStyle}"/>
+        <Button Content="Tester"
+                Style="{StaticResource ToolbarButtonStyle}"/>
 
-            </StackPanel>
+        <Button Content="Paramètres"
+                Style="{StaticResource ToolbarButtonStyle}"/>
 
-        </Grid>
+    </StackPanel>
 
-        <!-- =========================================================================
-             FIN FONCTIONNALITÉ : BARRE D'OUTILS
-             ========================================================================= -->
+</Grid>
+
+<!-- =========================================================================
+     FIN FONCTIONNALITÉ : BARRE D'OUTILS
+     ========================================================================= -->
 
 
 
