@@ -5,8 +5,445 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:InputOS"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+
+        Title="InputOS"
+        Width="1200"
+        Height="750"
+        MinWidth="900"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#101010">
+
     <Grid>
 
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="45"/>
+        </Grid.RowDefinitions>
+
+
+        <!-- =========================================================================
+             FONCTIONNALITÉ : BARRE SUPÉRIEURE
+             ========================================================================= -->
+
+        <Grid Grid.Row="0"
+              Margin="35,0,35,0">
+
+            <!-- ---------------------------------------------------------------------
+                 STYLE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.Resources>
+
+                <Style x:Key="SettingsButtonStyle"
+                       TargetType="Button">
+
+                    <Setter Property="Width"
+                            Value="42"/>
+
+                    <Setter Property="Height"
+                            Value="42"/>
+
+                    <Setter Property="Background"
+                            Value="#1C1C1C"/>
+
+                    <Setter Property="Foreground"
+                            Value="#FFFFFF"/>
+
+                    <Setter Property="BorderThickness"
+                            Value="0"/>
+
+                    <Setter Property="FontSize"
+                            Value="19"/>
+
+                    <Setter Property="Cursor"
+                            Value="Hand"/>
+
+                    <Setter Property="Template">
+
+                        <Setter.Value>
+
+                            <ControlTemplate TargetType="Button">
+
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="10">
+
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+
+                                </Border>
+
+                            </ControlTemplate>
+
+                        </Setter.Value>
+
+                    </Setter>
+
+                </Style>
+
+            </Grid.Resources>
+
+
+            <!-- ---------------------------------------------------------------------
+                 INTERFACE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                <TextBlock Text="INPUT"
+                           Foreground="#FFFFFF"
+                           FontSize="25"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+
+                <TextBlock Text="OS"
+                           Foreground="#7C5CFF"
+                           FontSize="25"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+
+            </StackPanel>
+
+
+            <Button Grid.Column="1"
+                    Style="{StaticResource SettingsButtonStyle}"
+                    Content="⚙"
+                    ToolTip="Paramètres"/>
+
+        </Grid>
+
+        <!-- =========================================================================
+             FIN FONCTIONNALITÉ : BARRE SUPÉRIEURE
+             ========================================================================= -->
+
+
+
+        <!-- =========================================================================
+             FONCTIONNALITÉ : PAGE D'ACCUEIL
+             ========================================================================= -->
+
+        <Grid Grid.Row="1"
+              Margin="35,10,35,20">
+
+            <!-- ---------------------------------------------------------------------
+                 STYLE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.Resources>
+
+                <Style x:Key="PageTitleStyle"
+                       TargetType="TextBlock">
+
+                    <Setter Property="Foreground"
+                            Value="#FFFFFF"/>
+
+                    <Setter Property="FontSize"
+                            Value="30"/>
+
+                    <Setter Property="FontWeight"
+                            Value="SemiBold"/>
+
+                </Style>
+
+
+                <Style x:Key="PageSubtitleStyle"
+                       TargetType="TextBlock">
+
+                    <Setter Property="Foreground"
+                            Value="#888888"/>
+
+                    <Setter Property="FontSize"
+                            Value="14"/>
+
+                </Style>
+
+            </Grid.Resources>
+
+
+            <!-- ---------------------------------------------------------------------
+                 INTERFACE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+
+            <StackPanel Grid.Row="0">
+
+                <TextBlock Text="Mes appareils"
+                           Style="{StaticResource PageTitleStyle}"/>
+
+                <TextBlock Text="Gérez et personnalisez vos manettes depuis InputOS."
+                           Style="{StaticResource PageSubtitleStyle}"
+                           Margin="0,7,0,0"/>
+
+            </StackPanel>
+
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : ZONE DES MANETTES
+                 ========================================================================= -->
+
+            <Grid Grid.Row="1"
+                  Margin="0,35,0,0">
+
+                <!-- -----------------------------------------------------------------
+                     STYLE
+                     ----------------------------------------------------------------- -->
+
+                <Grid.Resources>
+
+                    <Style x:Key="EmptyControllerCardStyle"
+                           TargetType="Border">
+
+                        <Setter Property="Width"
+                                Value="330"/>
+
+                        <Setter Property="Height"
+                                Value="360"/>
+
+                        <Setter Property="Background"
+                                Value="#181818"/>
+
+                        <Setter Property="BorderBrush"
+                                Value="#262626"/>
+
+                        <Setter Property="BorderThickness"
+                                Value="1"/>
+
+                        <Setter Property="CornerRadius"
+                                Value="18"/>
+
+                        <Setter Property="HorizontalAlignment"
+                                Value="Left"/>
+
+                        <Setter Property="VerticalAlignment"
+                                Value="Top"/>
+
+                    </Style>
+
+
+                    <Style x:Key="ControllerIconContainerStyle"
+                           TargetType="Border">
+
+                        <Setter Property="Width"
+                                Value="95"/>
+
+                        <Setter Property="Height"
+                                Value="95"/>
+
+                        <Setter Property="Background"
+                                Value="#202020"/>
+
+                        <Setter Property="CornerRadius"
+                                Value="48"/>
+
+                    </Style>
+
+
+                    <Style x:Key="EmptyCardTitleStyle"
+                           TargetType="TextBlock">
+
+                        <Setter Property="Foreground"
+                                Value="#FFFFFF"/>
+
+                        <Setter Property="FontSize"
+                                Value="20"/>
+
+                        <Setter Property="FontWeight"
+                                Value="SemiBold"/>
+
+                        <Setter Property="TextAlignment"
+                                Value="Center"/>
+
+                    </Style>
+
+
+                    <Style x:Key="EmptyCardTextStyle"
+                           TargetType="TextBlock">
+
+                        <Setter Property="Foreground"
+                                Value="#808080"/>
+
+                        <Setter Property="FontSize"
+                                Value="13"/>
+
+                        <Setter Property="TextAlignment"
+                                Value="Center"/>
+
+                        <Setter Property="TextWrapping"
+                                Value="Wrap"/>
+
+                    </Style>
+
+                </Grid.Resources>
+
+
+                <!-- -----------------------------------------------------------------
+                     INTERFACE
+                     ----------------------------------------------------------------- -->
+
+                <Border Style="{StaticResource EmptyControllerCardStyle}">
+
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Width="240">
+
+                        <Border Style="{StaticResource ControllerIconContainerStyle}"
+                                HorizontalAlignment="Center">
+
+                            <Viewbox Width="47"
+                                     Height="47"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center">
+
+                                <Canvas Width="64"
+                                        Height="40">
+
+                                    <Path Stroke="#707070"
+                                          StrokeThickness="4"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          Data="M 18,8
+                                                C 10,8 6,15 4,25
+                                                C 2,34 7,38 12,34
+                                                L 20,27
+                                                L 44,27
+                                                L 52,34
+                                                C 57,38 62,34 60,25
+                                                C 58,15 54,8 46,8
+                                                Z"/>
+
+                                    <Line X1="18"
+                                          Y1="14"
+                                          X2="18"
+                                          Y2="24"
+                                          Stroke="#707070"
+                                          StrokeThickness="3"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"/>
+
+                                    <Line X1="13"
+                                          Y1="19"
+                                          X2="23"
+                                          Y2="19"
+                                          Stroke="#707070"
+                                          StrokeThickness="3"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"/>
+
+                                    <Ellipse Width="5"
+                                             Height="5"
+                                             Canvas.Left="43"
+                                             Canvas.Top="14"
+                                             Fill="#707070"/>
+
+                                    <Ellipse Width="5"
+                                             Height="5"
+                                             Canvas.Left="49"
+                                             Canvas.Top="20"
+                                             Fill="#707070"/>
+
+                                </Canvas>
+
+                            </Viewbox>
+
+                        </Border>
+
+
+                        <TextBlock Text="Aucune manette détectée"
+                                   Style="{StaticResource EmptyCardTitleStyle}"
+                                   Margin="0,25,0,0"/>
+
+
+                        <TextBlock Text="Branchez une manette compatible en USB ou connectez-la en Bluetooth."
+                                   Style="{StaticResource EmptyCardTextStyle}"
+                                   Margin="0,12,0,0"/>
+
+                    </StackPanel>
+
+                </Border>
+
+            </Grid>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : ZONE DES MANETTES
+                 ========================================================================= -->
+
+        </Grid>
+
+        <!-- =========================================================================
+             FIN FONCTIONNALITÉ : PAGE D'ACCUEIL
+             ========================================================================= -->
+
+
+
+        <!-- =========================================================================
+             FONCTIONNALITÉ : PIED DE PAGE
+             ========================================================================= -->
+
+        <Grid Grid.Row="2"
+              Margin="35,0,35,0">
+
+            <!-- ---------------------------------------------------------------------
+                 STYLE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.Resources>
+
+                <Style x:Key="FooterTextStyle"
+                       TargetType="TextBlock">
+
+                    <Setter Property="Foreground"
+                            Value="#555555"/>
+
+                    <Setter Property="FontSize"
+                            Value="11"/>
+
+                </Style>
+
+            </Grid.Resources>
+
+
+            <!-- ---------------------------------------------------------------------
+                 INTERFACE
+                 --------------------------------------------------------------------- -->
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+
+            <TextBlock Grid.Column="0"
+                       Text="InputOS"
+                       Style="{StaticResource FooterTextStyle}"
+                       VerticalAlignment="Center"/>
+
+
+            <TextBlock Grid.Column="1"
+                       Text="v0.1.0"
+                       Style="{StaticResource FooterTextStyle}"
+                       VerticalAlignment="Center"/>
+
+        </Grid>
+
+        <!-- =========================================================================
+             FIN FONCTIONNALITÉ : PIED DE PAGE
+             ========================================================================= -->
+
     </Grid>
+
 </Window>
