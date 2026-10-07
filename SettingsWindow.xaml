@@ -1,0 +1,69 @@
+<Window x:Class="InputOS.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
+        Title="InputOS - Paramètres"
+        Icon="Assets/Icons/iOSBlack.ico"
+
+        Width="390"
+        Height="440"
+
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource AppForegroundBrush}">
+
+    <Grid Margin="10">
+
+
+        <!-- =========================================================================
+             FONCTIONNALITÉ : PARAMÈTRES DE FENÊTRE
+             ========================================================================= -->
+
+        <Border BorderBrush="{DynamicResource AppBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="2"
+                Padding="0,8,0,0"
+                VerticalAlignment="Top">
+
+            <Grid>
+
+                <!-- =====================================================================
+                     TITRE DE SECTION
+                     ===================================================================== -->
+
+                <TextBlock Text="Fenêtre"
+                           Foreground="{DynamicResource AppForegroundBrush}"
+                           Background="{DynamicResource AppBackgroundBrush}"
+                           Margin="8,-17,0,0"
+                           Padding="4,0"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"/>
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <StackPanel Margin="15">
+
+                    <CheckBox x:Name="CloseToTrayCheckBox"
+                              Content="Minimiser en arrière-plan"
+                              Foreground="{DynamicResource AppForegroundBrush}"
+                              VerticalAlignment="Center"/>
+
+                </StackPanel>
+
+            </Grid>
+
+        </Border>
+
+        <!-- =========================================================================
+             FIN FONCTIONNALITÉ : PARAMÈTRES DE FENÊTRE
+             ========================================================================= -->
+
+
+    </Grid>
+
+</Window>

@@ -7,11 +7,15 @@
         mc:Ignorable="d"
 
         Title="InputOS"
-        Width="900"
-        Height="600"
-        MinWidth="700"
-        MinHeight="450"
-        WindowStartupLocation="CenterScreen">
+        Icon="Assets/Icons/iOSBlack.ico"
+        Width="1000"
+        Height="650"
+        MinWidth="750"
+        MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource AppForegroundBrush}">
 
     <Grid>
 
@@ -23,65 +27,77 @@
 
 
         <!-- =========================================================================
-     FONCTIONNALITÉ : BARRE D'OUTILS
-     ========================================================================= -->
+             FONCTIONNALITÉ : BARRE D'OUTILS
+             ========================================================================= -->
 
-<Grid Grid.Row="0"
-      Margin="10">
+        <Grid Grid.Row="0"
+              Margin="10">
 
-    <!-- =====================================================================
-         STYLE
-         ===================================================================== -->
+            <!-- =====================================================================
+                 STYLE
+                 ===================================================================== -->
 
-    <Grid.Resources>
+            <Grid.Resources>
 
-        <Style x:Key="ToolbarButtonStyle"
-               TargetType="Button">
+                <Style x:Key="ToolbarButtonStyle"
+                       TargetType="Button">
 
-            <Setter Property="Padding"
-                    Value="10,5"/>
+                    <Setter Property="Padding"
+                            Value="10,5"/>
 
-            <Setter Property="Margin"
-                    Value="0,0,5,0"/>
+                    <Setter Property="Margin"
+                            Value="0,0,5,0"/>
 
-            <Setter Property="MinWidth"
-                    Value="90"/>
+                    <Setter Property="MinWidth"
+                            Value="90"/>
 
-        </Style>
+                    <Setter Property="Background"
+                            Value="{DynamicResource AppPanelBrush}"/>
 
-    </Grid.Resources>
+                    <Setter Property="Foreground"
+                            Value="{DynamicResource AppForegroundBrush}"/>
+
+                    <Setter Property="BorderBrush"
+                            Value="{DynamicResource AppBorderBrush}"/>
+
+                    <Setter Property="BorderThickness"
+                            Value="1"/>
+
+                </Style>
+
+            </Grid.Resources>
 
 
-    <!-- =====================================================================
-         INTERFACE
-         ===================================================================== -->
+            <!-- =====================================================================
+                 INTERFACE
+                 ===================================================================== -->
 
-    <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal">
 
-        <Button Content="Actualiser"
-                Style="{StaticResource ToolbarButtonStyle}"/>
+                <Button Content="Actualiser"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Click="RefreshButton_Click"/>
 
-        <Button Content="Informations"
-                Style="{StaticResource ToolbarButtonStyle}"/>
+                <Button Content="Tester"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Click="TesterButton_Click"/>
 
-        <Button Content="Tester"
-                Style="{StaticResource ToolbarButtonStyle}"/>
+                <Button Content="Paramètres"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Click="SettingsButton_Click"/>
 
-        <Button Content="Paramètres"
-                Style="{StaticResource ToolbarButtonStyle}"/>
+            </StackPanel>
 
-    </StackPanel>
+        </Grid>
 
-</Grid>
-
-<!-- =========================================================================
-     FIN FONCTIONNALITÉ : BARRE D'OUTILS
-     ========================================================================= -->
+        <!-- =========================================================================
+             FIN FONCTIONNALITÉ : BARRE D'OUTILS
+             ========================================================================= -->
 
 
 
         <!-- =========================================================================
-             FONCTIONNALITÉ : LISTE DES MANETTES
+             FONCTIONNALITÉ : GESTION DES PÉRIPHÉRIQUES
              ========================================================================= -->
 
         <Grid Grid.Row="1"
@@ -93,14 +109,37 @@
 
             <Grid.Resources>
 
-                <Style x:Key="DeviceTreeStyle"
-                       TargetType="TreeView">
+                <Style x:Key="InformationLabelStyle"
+                       TargetType="TextBlock">
 
-                    <Setter Property="BorderThickness"
-                            Value="1"/>
+                    <Setter Property="Margin"
+                            Value="0,0,10,8"/>
 
-                    <Setter Property="Padding"
-                            Value="5"/>
+                    <Setter Property="FontWeight"
+                            Value="SemiBold"/>
+
+                </Style>
+
+
+                <Style x:Key="InformationValueStyle"
+                       TargetType="TextBlock">
+
+                    <Setter Property="Margin"
+                            Value="0,0,0,8"/>
+
+                    <Setter Property="TextWrapping"
+                            Value="Wrap"/>
+
+                </Style>
+
+
+                <Style TargetType="TreeViewItem">
+
+                    <Setter Property="Foreground"
+                            Value="{DynamicResource AppForegroundBrush}"/>
+
+                    <Setter Property="Background"
+                            Value="Transparent"/>
 
                 </Style>
 
@@ -112,177 +151,259 @@
                  ===================================================================== -->
 
             <Grid.ColumnDefinitions>
-
-                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="320"/>
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
-
             </Grid.ColumnDefinitions>
 
 
-            <!-- =====================================================================
-                 FONCTIONNALITÉ : ARBORESCENCE DES PÉRIPHÉRIQUES
-                 ===================================================================== -->
-
-            <GroupBox Grid.Column="0"
-                      Header="Périphériques">
-
-                <TreeView Style="{StaticResource DeviceTreeStyle}">
-
-                    <TreeViewItem Header="Manettes">
-
-                        <TreeViewItem Header="Aucune manette détectée"/>
-
-                    </TreeViewItem>
-
-                </TreeView>
-
-            </GroupBox>
 
             <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : ARBORESCENCE DES PÉRIPHÉRIQUES
+                 FONCTIONNALITÉ : LISTE DES MANETTES
+                 ========================================================================= -->
+
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="2"
+                    Padding="0,8,0,0">
+
+                <Grid>
+
+                    <TextBlock Text="Périphériques"
+                               Foreground="{DynamicResource AppForegroundBrush}"
+                               Background="{DynamicResource AppBackgroundBrush}"
+                               Margin="8,-17,0,0"
+                               Padding="4,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"/>
+
+
+                    <TreeView x:Name="DeviceTreeView"
+                              Margin="8"
+                              Background="{DynamicResource AppPanelBrush}"
+                              Foreground="{DynamicResource AppForegroundBrush}"
+                              BorderBrush="{DynamicResource AppBorderBrush}"
+                              BorderThickness="1"
+                              SelectedItemChanged="DeviceTreeView_SelectedItemChanged"/>
+
+                </Grid>
+
+            </Border>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : LISTE DES MANETTES
                  ========================================================================= -->
 
 
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : SÉPARATEUR
+                 ========================================================================= -->
 
             <GridSplitter Grid.Column="1"
                           Width="5"
                           HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"/>
+                          VerticalAlignment="Stretch"
+                          Background="Transparent">
+
+                <GridSplitter.Template>
+
+                    <ControlTemplate TargetType="GridSplitter">
+
+                        <Border Width="1"
+                                HorizontalAlignment="Center"
+                                Background="{DynamicResource AppBorderBrush}"/>
+
+                    </ControlTemplate>
+
+                </GridSplitter.Template>
+
+            </GridSplitter>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : SÉPARATEUR
+                 ========================================================================= -->
 
 
 
             <!-- =========================================================================
-                 FONCTIONNALITÉ : INFORMATIONS DU PÉRIPHÉRIQUE
+                 FONCTIONNALITÉ : INFORMATIONS MANETTE
                  ========================================================================= -->
 
-            <GroupBox Grid.Column="2"
-                      Header="Informations">
+            <Border Grid.Column="2"
+                    BorderBrush="{DynamicResource AppBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="2"
+                    Padding="0,8,0,0">
 
-                <Grid Margin="10">
+                <Grid>
 
-                    <Grid.RowDefinitions>
-
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-
-                    </Grid.RowDefinitions>
+                    <TextBlock Text="Informations"
+                               Foreground="{DynamicResource AppForegroundBrush}"
+                               Background="{DynamicResource AppBackgroundBrush}"
+                               Margin="8,-17,0,0"
+                               Padding="4,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"/>
 
 
-                    <Grid.ColumnDefinitions>
+                    <Grid Margin="15">
 
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="*"/>
-
-                    </Grid.ColumnDefinitions>
-
-
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Text="Nom :"
-                               Margin="0,0,10,8"/>
-
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
 
-                    <TextBlock Grid.Row="1"
-                               Grid.Column="0"
-                               Text="Type :"
-                               Margin="0,0,10,8"/>
-
-                    <TextBlock Grid.Row="1"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
 
-                    <TextBlock Grid.Row="2"
-                               Grid.Column="0"
-                               Text="Connexion :"
-                               Margin="0,0,10,8"/>
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Nom :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
 
-                    <TextBlock Grid.Row="2"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
-
-
-                    <TextBlock Grid.Row="3"
-                               Grid.Column="0"
-                               Text="VID :"
-                               Margin="0,0,10,8"/>
-
-                    <TextBlock Grid.Row="3"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
+                        <TextBlock x:Name="DeviceNameText"
+                                   Grid.Row="0"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
 
 
-                    <TextBlock Grid.Row="4"
-                               Grid.Column="0"
-                               Text="PID :"
-                               Margin="0,0,10,8"/>
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="Type :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
 
-                    <TextBlock Grid.Row="4"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
-
-
-                    <TextBlock Grid.Row="5"
-                               Grid.Column="0"
-                               Text="Firmware :"
-                               Margin="0,0,10,8"/>
-
-                    <TextBlock Grid.Row="5"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
+                        <TextBlock x:Name="DeviceTypeText"
+                                   Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
 
 
-                    <TextBlock Grid.Row="6"
-                               Grid.Column="0"
-                               Text="Batterie :"
-                               Margin="0,0,10,8"/>
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Connexion :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
 
-                    <TextBlock Grid.Row="6"
-                               Grid.Column="1"
-                               Text="-"
-                               Margin="0,0,0,8"/>
+                        <TextBlock x:Name="DeviceConnectionText"
+                                   Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
 
 
-                    <TextBlock Grid.Row="7"
-                               Grid.Column="0"
-                               Text="État :"
-                               Margin="0,0,10,8"/>
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Text="VID :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
 
-                    <TextBlock Grid.Row="7"
-                               Grid.Column="1"
-                               Text="Aucun périphérique sélectionné"
-                               Margin="0,0,0,8"/>
+                        <TextBlock x:Name="DeviceVidText"
+                                   Grid.Row="3"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="4"
+                                   Grid.Column="0"
+                                   Text="PID :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DevicePidText"
+                                   Grid.Row="4"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="5"
+                                   Grid.Column="0"
+                                   Text="Boutons :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceButtonsText"
+                                   Grid.Row="5"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="6"
+                                   Grid.Column="0"
+                                   Text="Axes :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceAxesText"
+                                   Grid.Row="6"
+                                   Grid.Column="1"
+                                   Text="-"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="7"
+                                   Grid.Column="0"
+                                   Text="Firmware :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceFirmwareText"
+                                   Grid.Row="7"
+                                   Grid.Column="1"
+                                   Text="Non disponible"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="8"
+                                   Grid.Column="0"
+                                   Text="Batterie :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceBatteryText"
+                                   Grid.Row="8"
+                                   Grid.Column="1"
+                                   Text="Non disponible"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="9"
+                                   Grid.Column="0"
+                                   Text="État :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceStatusText"
+                                   Grid.Row="9"
+                                   Grid.Column="1"
+                                   Text="Aucun périphérique sélectionné"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+                    </Grid>
 
                 </Grid>
 
-            </GroupBox>
+            </Border>
 
             <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : INFORMATIONS DU PÉRIPHÉRIQUE
+                 FIN FONCTIONNALITÉ : INFORMATIONS MANETTE
                  ========================================================================= -->
 
         </Grid>
 
         <!-- =========================================================================
-             FIN FONCTIONNALITÉ : LISTE DES MANETTES
+             FIN FONCTIONNALITÉ : GESTION DES PÉRIPHÉRIQUES
              ========================================================================= -->
 
 
@@ -291,13 +412,17 @@
              FONCTIONNALITÉ : BARRE D'ÉTAT
              ========================================================================= -->
 
-        <StatusBar Grid.Row="2">
+        <StatusBar Grid.Row="2"
+                   Background="{DynamicResource AppPanelBrush}"
+                   Foreground="{DynamicResource AppForegroundBrush}"
+                   BorderBrush="{DynamicResource AppBorderBrush}"
+                   BorderThickness="1,1,0,0">
 
             <!-- =====================================================================
                  STYLE
                  ===================================================================== -->
 
-            <!-- Aucun style spécifique pour le moment -->
+            <!-- Style Windows par défaut -->
 
 
             <!-- =====================================================================
@@ -306,11 +431,14 @@
 
             <StatusBarItem>
 
-                <TextBlock Text="Prêt"/>
+                <TextBlock x:Name="StatusText"
+                           Text="Prêt"/>
 
             </StatusBarItem>
 
-            <Separator/>
+
+            <Separator Background="{DynamicResource AppBorderBrush}"/>
+
 
             <StatusBarItem>
 

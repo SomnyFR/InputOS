@@ -1,13 +1,51 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System;
 
 namespace InputOS;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
-}
 
+    // ============================================================================
+    // FONCTIONNALITÉ : INITIALISATION DE L'APPLICATION
+    // ============================================================================
+
+    // ---------------------------------------------------------------------------
+    // LOGIQUE
+    // ---------------------------------------------------------------------------
+
+    protected override void OnStartup(
+        System.Windows.StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+
+        try
+        {
+            MainWindow mainWindow =
+                new();
+
+
+            MainWindow =
+                mainWindow;
+
+
+            mainWindow.Show();
+        }
+        catch (Exception exception)
+        {
+            System.Windows.MessageBox.Show(
+                exception.ToString(),
+                "Erreur au démarrage d'InputOS",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+
+
+            Shutdown();
+        }
+    }
+
+    // ============================================================================
+    // FIN FONCTIONNALITÉ : INITIALISATION DE L'APPLICATION
+    // ============================================================================
+
+}

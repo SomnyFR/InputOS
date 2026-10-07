@@ -1,0 +1,374 @@
+<Window x:Class="InputOS.TesterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+
+        Title="InputOS - Test de la manette"
+        Icon="Assets/Icons/iOSWhite.ico"
+        Width="850"
+        Height="700"
+        MinWidth="700"
+        MinHeight="600"
+        WindowStartupLocation="CenterOwner">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+        <StackPanel Margin="15">
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : INFORMATIONS MANETTE
+                 ========================================================================= -->
+
+            <Border BorderBrush="#808080"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="12"
+                    Margin="0,0,0,20">
+
+                <!-- =====================================================================
+                     STYLE
+                     ===================================================================== -->
+
+                <!-- Style Windows basique -->
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <StackPanel>
+
+                    <TextBlock x:Name="ControllerNameText"
+                               Text="Manette"
+                               FontSize="18"
+                               FontWeight="Bold"/>
+
+                    <TextBlock x:Name="ControllerHardwareText"
+                               Text="VID : - | PID : -"
+                               Margin="0,5,0,0"/>
+
+                </StackPanel>
+
+            </Border>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : INFORMATIONS MANETTE
+                 ========================================================================= -->
+
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : VALEURS DES AXES
+                 ========================================================================= -->
+
+            <GroupBox Header="Axes"
+                      Margin="0,0,0,20">
+
+                <!-- =====================================================================
+                     STYLE
+                     ===================================================================== -->
+
+                <!-- Style Windows basique -->
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <Grid Margin="10">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="Left X : "/>
+                            <Run x:Name="LeftXText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="Left Y : "/>
+                            <Run x:Name="LeftYText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="L2 : "/>
+                            <Run x:Name="LeftTriggerText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                    </StackPanel>
+
+
+                    <StackPanel Grid.Column="1">
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="Right X : "/>
+                            <Run x:Name="RightXText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="Right Y : "/>
+                            <Run x:Name="RightYText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                        <TextBlock Margin="0,3">
+                            <Run Text="R2 : "/>
+                            <Run x:Name="RightTriggerText"
+                                 Text="0.000"
+                                 FontWeight="Bold"/>
+                        </TextBlock>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </GroupBox>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : VALEURS DES AXES
+                 ========================================================================= -->
+
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : TEST DES STICKS
+                 ========================================================================= -->
+
+            <GroupBox Header="Sticks"
+                      Margin="0,0,0,20">
+
+                <!-- =====================================================================
+                     STYLE
+                     ===================================================================== -->
+
+                <GroupBox.Resources>
+
+                    <Style x:Key="StickBorderStyle"
+                           TargetType="Border">
+
+                        <Setter Property="Width"
+                                Value="200"/>
+
+                        <Setter Property="Height"
+                                Value="200"/>
+
+                        <Setter Property="BorderBrush"
+                                Value="#888888"/>
+
+                        <Setter Property="BorderThickness"
+                                Value="1"/>
+
+                        <Setter Property="CornerRadius"
+                                Value="100"/>
+
+                    </Style>
+
+                </GroupBox.Resources>
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <Grid Margin="20">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+
+                    <StackPanel Grid.Column="0"
+                                HorizontalAlignment="Center">
+
+                        <TextBlock Text="Stick gauche"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+
+                        <Border Style="{StaticResource StickBorderStyle}">
+
+                            <Canvas x:Name="LeftStickCanvas"
+                                    Width="198"
+                                    Height="198">
+
+                                <Line X1="99"
+                                      Y1="0"
+                                      X2="99"
+                                      Y2="198"
+                                      Stroke="#AAAAAA"
+                                      StrokeThickness="1"/>
+
+                                <Line X1="0"
+                                      Y1="99"
+                                      X2="198"
+                                      Y2="99"
+                                      Stroke="#AAAAAA"
+                                      StrokeThickness="1"/>
+
+                                <Ellipse x:Name="LeftStickPoint"
+                                         Width="10"
+                                         Height="10"
+                                         Fill="Black"
+                                         Canvas.Left="94"
+                                         Canvas.Top="94"/>
+
+                            </Canvas>
+
+                        </Border>
+
+
+                        <CheckBox x:Name="LeftInvertYAxisCheckBox"
+                                  Content="Inverser l'axe Y"
+                                  Margin="0,12,0,0"
+                                  HorizontalAlignment="Center"
+                                  Checked="LeftInvertYAxisCheckBox_Changed"
+                                  Unchecked="LeftInvertYAxisCheckBox_Changed"/>
+
+                    </StackPanel>
+
+
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Center">
+
+                        <TextBlock Text="Stick droit"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+
+                        <Border Style="{StaticResource StickBorderStyle}">
+
+                            <Canvas x:Name="RightStickCanvas"
+                                    Width="198"
+                                    Height="198">
+
+                                <Line X1="99"
+                                      Y1="0"
+                                      X2="99"
+                                      Y2="198"
+                                      Stroke="#AAAAAA"
+                                      StrokeThickness="1"/>
+
+                                <Line X1="0"
+                                      Y1="99"
+                                      X2="198"
+                                      Y2="99"
+                                      Stroke="#AAAAAA"
+                                      StrokeThickness="1"/>
+
+                                <Ellipse x:Name="RightStickPoint"
+                                         Width="10"
+                                         Height="10"
+                                         Fill="Black"
+                                         Canvas.Left="94"
+                                         Canvas.Top="94"/>
+
+                            </Canvas>
+
+                        </Border>
+
+
+                        <CheckBox x:Name="RightInvertYAxisCheckBox"
+                                  Content="Inverser l'axe Y"
+                                  Margin="0,12,0,0"
+                                  HorizontalAlignment="Center"
+                                  Checked="RightInvertYAxisCheckBox_Changed"
+                                  Unchecked="RightInvertYAxisCheckBox_Changed"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </GroupBox>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : TEST DES STICKS
+                 ========================================================================= -->
+
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : TEST DES BOUTONS
+                 ========================================================================= -->
+
+            <GroupBox Header="Boutons"
+                      Margin="0,0,0,20">
+
+                <!-- =====================================================================
+                     STYLE
+                     ===================================================================== -->
+
+                <!-- Les boutons sont générés dynamiquement en C# -->
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <WrapPanel x:Name="ButtonsPanel"
+                           Margin="10"/>
+
+            </GroupBox>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : TEST DES BOUTONS
+                 ========================================================================= -->
+
+
+
+            <!-- =========================================================================
+                 FONCTIONNALITÉ : D-PAD
+                 ========================================================================= -->
+
+            <GroupBox Header="D-Pad"
+                      Margin="0,0,0,20">
+
+                <!-- =====================================================================
+                     STYLE
+                     ===================================================================== -->
+
+                <!-- Style Windows basique -->
+
+
+                <!-- =====================================================================
+                     INTERFACE
+                     ===================================================================== -->
+
+                <StackPanel Margin="10">
+
+                    <TextBlock Text="Direction actuelle :"/>
+
+                    <TextBlock x:Name="DPadText"
+                               Text="Neutre"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Margin="0,5,0,0"/>
+
+                </StackPanel>
+
+            </GroupBox>
+
+            <!-- =========================================================================
+                 FIN FONCTIONNALITÉ : D-PAD
+                 ========================================================================= -->
+
+
+        </StackPanel>
+
+    </ScrollViewer>
+
+</Window>
