@@ -7,7 +7,7 @@
         mc:Ignorable="d"
 
         Title="InputOS"
-        Icon="Assets/Icons/iOSBlack.ico"
+        Icon="/InputOS;component/Assets/Icons/iOSBlack.ico"
         Width="1000"
         Height="650"
         MinWidth="750"
@@ -78,7 +78,9 @@
                         Style="{StaticResource ToolbarButtonStyle}"
                         Click="RefreshButton_Click"/>
 
-                <Button Content="Tester"
+                <Button x:Name="TesterButton"
+                        Content="Tester"
+                        IsEnabled="False"
                         Style="{StaticResource ToolbarButtonStyle}"
                         Click="TesterButton_Click"/>
 
@@ -261,6 +263,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -271,24 +274,62 @@
                         </Grid.ColumnDefinitions>
 
 
-                        <TextBlock Grid.Row="0"
+                        <!-- =====================================================================
+                             FONCTIONNALITÉ : AVERTISSEMENT DE COMPATIBILITÉ
+                             ===================================================================== -->
+
+                        <Border x:Name="ControllerCompatibilityWarning"
+                                Grid.Row="0"
+                                Grid.ColumnSpan="2"
+                                Visibility="Collapsed"
+                                Background="{DynamicResource AppPanelBrush}"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="2"
+                                Padding="10"
+                                Margin="0,0,0,15">
+
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+
+                                <TextBlock x:Name="ControllerCompatibilityWarningText" Grid.Column="0"
+                                           Text="Manette non compatible. Aidez-nous à l’ajouter à InputOS."
+                                           Foreground="{DynamicResource AppForegroundBrush}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"/>
+
+
+                                <Button Grid.Column="1"
+                                        Content="Suggérer la manette"
+                                        Margin="10,0,0,0"
+                                        Padding="10,5"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource AppPanelBrush}"
+                                        Foreground="{DynamicResource AppForegroundBrush}"
+                                        BorderBrush="{DynamicResource AppBorderBrush}"
+                                        BorderThickness="1"
+                                        Click="SuggestControllerButton_Click"/>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- =====================================================================
+                             FIN FONCTIONNALITÉ : AVERTISSEMENT DE COMPATIBILITÉ
+                             ===================================================================== -->
+
+                        <TextBlock Grid.Row="1"
                                    Grid.Column="0"
                                    Text="Nom :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
                         <TextBlock x:Name="DeviceNameText"
-                                   Grid.Row="0"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
-
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="0"
-                                   Text="Type :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
-
-                        <TextBlock x:Name="DeviceTypeText"
                                    Grid.Row="1"
                                    Grid.Column="1"
                                    Text="-"
@@ -297,10 +338,10 @@
 
                         <TextBlock Grid.Row="2"
                                    Grid.Column="0"
-                                   Text="Connexion :"
+                                   Text="Type :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceConnectionText"
+                        <TextBlock x:Name="DeviceTypeText"
                                    Grid.Row="2"
                                    Grid.Column="1"
                                    Text="-"
@@ -309,10 +350,10 @@
 
                         <TextBlock Grid.Row="3"
                                    Grid.Column="0"
-                                   Text="VID :"
+                                   Text="Connexion :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceVidText"
+                        <TextBlock x:Name="DeviceConnectionText"
                                    Grid.Row="3"
                                    Grid.Column="1"
                                    Text="-"
@@ -321,10 +362,10 @@
 
                         <TextBlock Grid.Row="4"
                                    Grid.Column="0"
-                                   Text="PID :"
+                                   Text="VID :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DevicePidText"
+                        <TextBlock x:Name="DeviceVidText"
                                    Grid.Row="4"
                                    Grid.Column="1"
                                    Text="-"
@@ -333,10 +374,10 @@
 
                         <TextBlock Grid.Row="5"
                                    Grid.Column="0"
-                                   Text="Boutons :"
+                                   Text="PID :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceButtonsText"
+                        <TextBlock x:Name="DevicePidText"
                                    Grid.Row="5"
                                    Grid.Column="1"
                                    Text="-"
@@ -345,10 +386,10 @@
 
                         <TextBlock Grid.Row="6"
                                    Grid.Column="0"
-                                   Text="Axes :"
+                                   Text="Boutons :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceAxesText"
+                        <TextBlock x:Name="DeviceButtonsText"
                                    Grid.Row="6"
                                    Grid.Column="1"
                                    Text="-"
@@ -357,22 +398,22 @@
 
                         <TextBlock Grid.Row="7"
                                    Grid.Column="0"
-                                   Text="Firmware :"
+                                   Text="Axes :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceFirmwareText"
+                        <TextBlock x:Name="DeviceAxesText"
                                    Grid.Row="7"
                                    Grid.Column="1"
-                                   Text="Non disponible"
+                                   Text="-"
                                    Style="{StaticResource InformationValueStyle}"/>
 
 
                         <TextBlock Grid.Row="8"
                                    Grid.Column="0"
-                                   Text="Batterie :"
+                                   Text="Firmware :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceBatteryText"
+                        <TextBlock x:Name="DeviceFirmwareText"
                                    Grid.Row="8"
                                    Grid.Column="1"
                                    Text="Non disponible"
@@ -381,11 +422,23 @@
 
                         <TextBlock Grid.Row="9"
                                    Grid.Column="0"
+                                   Text="Batterie :"
+                                   Style="{StaticResource InformationLabelStyle}"/>
+
+                        <TextBlock x:Name="DeviceBatteryText"
+                                   Grid.Row="9"
+                                   Grid.Column="1"
+                                   Text="Non disponible"
+                                   Style="{StaticResource InformationValueStyle}"/>
+
+
+                        <TextBlock Grid.Row="10"
+                                   Grid.Column="0"
                                    Text="État :"
                                    Style="{StaticResource InformationLabelStyle}"/>
 
                         <TextBlock x:Name="DeviceStatusText"
-                                   Grid.Row="9"
+                                   Grid.Row="10"
                                    Grid.Column="1"
                                    Text="Aucun périphérique sélectionné"
                                    Style="{StaticResource InformationValueStyle}"/>

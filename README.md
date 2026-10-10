@@ -1,5 +1,24 @@
 # InputOS
 
+## Organisation du projet
+
+- `Views/Windows/` : fenêtres principales et testeur.
+- `Views/Windows/ControllerSuggestion/` : parcours de configuration des manettes.
+- `Models/` : données et profils.
+- `Services/Controllers/` : détection, calibration, profils et diagnostics.
+- `Services/Settings/` et `Services/Updates/` : paramètres et mises à jour.
+- `Config/` : configuration du service de diagnostic.
+- `Assets/` : icônes et images.
+- `Properties/` : informations d’assembly et imports communs.
+- `Cloudflare/` : service de réception des diagnostics et guide d’installation.
+- `Packaging/` : scripts pour créer les versions et le setup de migration.
+- `Packaging/Legacy/` : ancien script de la v1, conservé comme référence.
+- `Releases/<version>/` : setups et paquets générés, exclus de Git.
+- `bin/` et `obj/` : fichiers de compilation ; l’ancienne publication est archivée dans `obj/LegacyPublish/`.
+
+Les points d’entrée `App.xaml` et `Program.cs` restent à la racine avec `InputOS.csproj`.
+Le fichier `Config/diagnostic-settings.json` est copié à côté de l’exécutable sous le nom `diagnostic-settings.json`.
+
 InputOS is a Windows application designed to detect, identify, and test PlayStation and Xbox controllers.
 
 The project aims to provide a simple interface for checking controller inputs and, over time, centralize more controller configuration features.

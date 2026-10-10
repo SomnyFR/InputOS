@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Windows.Gaming.Input;
+using InputOS.Models;
+using InputOS.Services;
 
 namespace InputOS;
 
@@ -18,6 +20,8 @@ public partial class TesterWindow : Window
     // ---------------------------------------------------------------------------
 
     private readonly RawGameController controller;
+    private readonly ControllerLocalProfile? localProfile;
+    private readonly DualSenseMicrophoneReader? localMicrophone;
 
     private readonly DispatcherTimer inputTimer;
 
@@ -44,6 +48,8 @@ public partial class TesterWindow : Window
         InitializeComponent();
 
         controller = selectedController;
+        localProfile = ControllerLocalProfileService.Load(controller);
+        if (localProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
 
 
         buttonValues =
@@ -104,6 +110,7 @@ public partial class TesterWindow : Window
 
     private void InitializeControllerInformation()
     {
+        if (localProfile != null) Title = "InputOS - Profil local provisoire";
         ControllerNameText.Text =
             string.IsNullOrWhiteSpace(controller.DisplayName)
                 ? "Manette"
@@ -187,11 +194,12 @@ public partial class TesterWindow : Window
         buttonIndicators.Clear();
 
 
-        for (int i = 0; i < controller.ButtonCount; i++)
+        for (int i = 0; i < (localProfile?.Buttons.Mappings.Length ?? controller.ButtonCount); i++)
         {
             TextBlock buttonText = new()
             {
-                Text = $"B{i}",
+                Text = localProfile?.Buttons.Mappings[i].Name ?? $"B{i}",
+                TextWrapping = TextWrapping.Wrap,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 14
@@ -314,26 +322,31 @@ public partial class TesterWindow : Window
 
     private void UpdateButtons()
     {
-        for (int i = 0; i < buttonValues.Length; i++)
+        var reading = localProfile == null ? null : new ControllerDetectionResult(localProfile.Model,
+            localProfile.VendorId, localProfile.ProductId, false, false, Array.Empty<string>(),
+            buttonValues, axisValues, switchValues.Select(value => value.ToString()).ToArray())
+            { MicrophonePressed = localMicrophone?.Pressed };
+        for (int i = 0; i < buttonIndicators.Count; i++)
         {
+            bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(localProfile!.Buttons.Mappings[i], reading);
             Border indicator =
                 buttonIndicators[i];
 
 
             indicator.Background =
-                buttonValues[i]
+                pressed
                     ? Brushes.LightGray
                     : Brushes.White;
 
 
             indicator.BorderBrush =
-                buttonValues[i]
+                pressed
                     ? Brushes.Black
                     : Brushes.Gray;
 
 
             indicator.BorderThickness =
-                buttonValues[i]
+                pressed
                     ? new Thickness(2)
                     : new Thickness(1);
         }
@@ -376,6 +389,11 @@ public partial class TesterWindow : Window
 
     private ControllerAxisMapping GetAxisMapping()
     {
+        if (localProfile != null)
+            return new(localProfile.Joysticks.LeftX.AxisIndex, localProfile.Joysticks.LeftY.AxisIndex,
+                localProfile.Joysticks.RightX.AxisIndex, localProfile.Joysticks.RightY.AxisIndex,
+                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
+                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
         if (controller.HardwareVendorId ==
                 MicrosoftVendorId &&
             controller.HardwareProductId ==
@@ -496,6 +514,13 @@ public partial class TesterWindow : Window
 
         double rawValue =
             axisValues[axisIndex];
+        if (localProfile != null)
+        {
+            var axis = new[] { localProfile.Joysticks.LeftX, localProfile.Joysticks.LeftY,
+                localProfile.Joysticks.RightX, localProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
+            double value = axis.Normalize(rawValue);
+            return axis == localProfile.Joysticks.LeftY || axis == localProfile.Joysticks.RightY ? -value : value;
+        }
 
 
         return (rawValue * 2.0) - 1.0;
@@ -512,6 +537,12 @@ public partial class TesterWindow : Window
         }
 
 
+        if (localProfile != null)
+        {
+            var mapping = localProfile.Buttons.Mappings.FirstOrDefault(m => m.InputType == "Axis" && m.InputIndex == axisIndex);
+            if (mapping?.RestValue is double rest && mapping.PressedValue is double pressed)
+                return Math.Clamp((axisValues[axisIndex] - rest) / (pressed - rest), 0, 1);
+        }
         return axisValues[axisIndex];
     }
 
@@ -693,6 +724,16 @@ public partial class TesterWindow : Window
 
     private void UpdateDPad()
     {
+        if (localProfile != null)
+        {
+            var reading = new ControllerDetectionResult(localProfile.Model, localProfile.VendorId,
+                localProfile.ProductId, false, false, Array.Empty<string>(), buttonValues, axisValues,
+                switchValues.Select(value => value.ToString()).ToArray());
+            var directions = localProfile.Buttons.Mappings.Where(m => m.Id.StartsWith("Dpad", StringComparison.Ordinal))
+                .Where(m => ControllerButtonStateService.IsPressed(m, reading)).Select(m => m.Name).ToArray();
+            DPadText.Text = directions.Length == 0 ? "Neutre" : string.Join(" + ", directions);
+            return;
+        }
         if (switchValues.Length == 0)
         {
             DPadText.Text =
@@ -762,6 +803,7 @@ public partial class TesterWindow : Window
         object? sender,
         EventArgs e)
     {
+        localMicrophone?.Dispose();
         inputTimer.Stop();
 
         inputTimer.Tick -=

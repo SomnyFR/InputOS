@@ -3,6 +3,8 @@
   <PropertyGroup>
 
     <OutputType>WinExe</OutputType>
+    <StartupObject>InputOS.Program</StartupObject>
+    <Version>1.1.0</Version>
 
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 
@@ -38,7 +40,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HidSharp" Version="2.6.4" />
+    <Content Include="Config/diagnostic-settings.json" Link="diagnostic-settings.json" TargetPath="diagnostic-settings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
   <!-- =========================================================================

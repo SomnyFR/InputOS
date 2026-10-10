@@ -323,12 +323,7 @@ public partial class MainWindow : Window
     // CONFIGURATION
     // ---------------------------------------------------------------------------
 
-    private const ushort SonyVendorId =
-        0x054C;
-
-
-    private const ushort MicrosoftVendorId =
-        0x045E;
+    // La compatibilité est centralisée dans ControllerCompatibilityService.
 
 
     // ---------------------------------------------------------------------------
@@ -337,6 +332,9 @@ public partial class MainWindow : Window
 
     private void RefreshControllerList()
     {
+        ClearControllerInformation();
+
+
         DeviceTreeView.Items.Clear();
 
 
@@ -363,18 +361,11 @@ public partial class MainWindow : Window
             RawGameController controller
             in RawGameController.RawGameControllers)
         {
-            if (!IsSupportedOfficialController(
-                    controller))
-            {
-                continue;
-            }
-
-
             TreeViewItem controllerItem =
                 new()
                 {
                     Header =
-                        GetControllerDisplayName(
+                        ControllerCompatibilityService.GetControllerDisplayName(
                             controller),
 
                     Tag =
@@ -429,73 +420,6 @@ public partial class MainWindow : Window
         UpdateTrayTooltip();
     }
 
-
-    private static bool IsSupportedOfficialController(
-        RawGameController controller)
-    {
-        ushort vendorId =
-            controller.HardwareVendorId;
-
-
-        return vendorId == SonyVendorId ||
-               vendorId == MicrosoftVendorId;
-    }
-
-
-    private static string GetControllerDisplayName(
-        RawGameController controller)
-    {
-        ushort vendorId =
-            controller.HardwareVendorId;
-
-
-        ushort productId =
-            controller.HardwareProductId;
-
-
-        if (vendorId == SonyVendorId)
-        {
-            return productId switch
-            {
-                0x05C4 =>
-                    "DualShock 4",
-
-                0x09CC =>
-                    "DualShock 4",
-
-                0x0CE6 =>
-                    "DualSense",
-
-                0x0DF2 =>
-                    "DualSense Edge",
-
-                _ =>
-                    string.IsNullOrWhiteSpace(
-                        controller.DisplayName)
-                        ? "Manette PlayStation"
-                        : controller.DisplayName
-            };
-        }
-
-
-        if (vendorId == MicrosoftVendorId)
-        {
-            if (!string.IsNullOrWhiteSpace(
-                    controller.DisplayName))
-            {
-                return controller.DisplayName;
-            }
-
-
-            return "Manette Xbox";
-        }
-
-
-        return string.IsNullOrWhiteSpace(
-            controller.DisplayName)
-            ? "Manette"
-            : controller.DisplayName;
-    }
 
     // ============================================================================
     // FIN FONCTIONNALITÉ : DÉTECTION DES MANETTES
@@ -616,7 +540,7 @@ public partial class MainWindow : Window
 
 
         selectedControllerName =
-            GetControllerDisplayName(
+            ControllerCompatibilityService.GetControllerDisplayName(
                 controller);
 
 
@@ -631,13 +555,27 @@ public partial class MainWindow : Window
     private async Task DisplayControllerInformationAsync(
         RawGameController controller)
     {
+        var localProfile = ControllerLocalProfileService.Load(controller);
+        TesterButton.IsEnabled =
+            ControllerCompatibilityService.HasValidatedProfile(controller) || localProfile != null;
+        ControllerCompatibilityWarningText.Text = localProfile != null
+            ? "Profil local provisoire actif. Un profil officiel prendra la priorité lorsqu’il sera disponible."
+            : "Manette non compatible. Aidez-nous à l’ajouter à InputOS.";
+
+
+        ControllerCompatibilityWarning.Visibility =
+            ControllerCompatibilityService.HasValidatedProfile(controller)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+
         DeviceNameText.Text =
-            GetControllerDisplayName(
+            ControllerCompatibilityService.GetControllerDisplayName(
                 controller);
 
 
         DeviceTypeText.Text =
-            GetControllerType(
+            ControllerCompatibilityService.GetControllerType(
                 controller);
 
 
@@ -671,6 +609,14 @@ public partial class MainWindow : Window
             "Lecture...";
 
 
+        DeviceStatusText.Text =
+            "Connectée";
+
+
+        StatusText.Text =
+            $"{ControllerCompatibilityService.GetControllerDisplayName(controller)} sélectionnée";
+
+
         string? batteryDisplay =
             await ControllerBatteryService.GetBatteryDisplayAsync(
                 controller);
@@ -688,34 +634,20 @@ public partial class MainWindow : Window
         }
 
 
-        DeviceStatusText.Text =
-            "Connectée";
 
-
-        StatusText.Text =
-            $"{GetControllerDisplayName(controller)} sélectionnée";
-    }
-
-
-    private static string GetControllerType(
-        RawGameController controller)
-    {
-        return controller.HardwareVendorId switch
-        {
-            SonyVendorId =>
-                "PlayStation",
-
-            MicrosoftVendorId =>
-                "Xbox",
-
-            _ =>
-                "Inconnu"
-        };
     }
 
 
     private void ClearControllerInformation()
     {
+        TesterButton.IsEnabled =
+            false;
+
+
+        ControllerCompatibilityWarning.Visibility =
+            Visibility.Collapsed;
+
+
         DeviceNameText.Text =
             "-";
 
@@ -758,6 +690,61 @@ public partial class MainWindow : Window
 
     // ============================================================================
     // FIN FONCTIONNALITÉ : SÉLECTION D'UNE MANETTE
+    // ============================================================================
+
+
+
+    // ============================================================================
+    // FONCTIONNALITÉ : SUGGESTION D'UNE MANETTE
+    // ============================================================================
+
+    // ---------------------------------------------------------------------------
+    // LOGIQUE
+    // ---------------------------------------------------------------------------
+
+    private void SuggestControllerButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DeviceTreeView.SelectedItem
+                is not TreeViewItem selectedItem ||
+            selectedItem.Tag
+                is not RawGameController controller ||
+            ControllerCompatibilityService.HasValidatedProfile(controller))
+        {
+            return;
+        }
+
+
+        if (controller.IsWireless ||
+            !RawGameController.RawGameControllers.Contains(controller))
+        {
+            MessageBox.Show(
+                this,
+                "Pour suggérer cette manette, branchez-la avec un câble USB, puis sélectionnez sa connexion filaire dans InputOS.",
+                "Connexion filaire requise",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+
+            return;
+        }
+
+
+        ControllerSuggestionWindow suggestionWindow =
+            new(controller)
+            {
+                Owner =
+                    this
+            };
+
+
+        suggestionWindow.ShowDialog();
+        _ = DisplayControllerInformationAsync(controller);
+    }
+
+    // ============================================================================
+    // FIN FONCTIONNALITÉ : SUGGESTION D'UNE MANETTE
     // ============================================================================
 
 

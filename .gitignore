@@ -532,3 +532,7 @@ Publish/zh-Hant/UIAutomationTypes.resources.dll
 Publish/zh-Hant/WindowsBase.resources.dll
 Publish/zh-Hant/WindowsFormsIntegration.resources.dll
 Installer/
+Releases/
+Cloudflare/
+Packaging/
+
