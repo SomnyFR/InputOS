@@ -3,6 +3,7 @@
   <PropertyGroup>
 
     <OutputType>WinExe</OutputType>
+    <ApplicationIcon>Assets\Icons\iOSBlack.ico</ApplicationIcon>
     <StartupObject>InputOS.Program</StartupObject>
     <Version>1.1.0</Version>
 
