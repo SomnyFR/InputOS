@@ -4,6 +4,7 @@ namespace InputOS;
 
 public partial class App : System.Windows.Application
 {
+    public InputOS.Services.ApplicationUpdateService? Updates { get; private set; }
 
     // ============================================================================
     // FONCTIONNALITÉ : INITIALISATION DE L'APPLICATION
@@ -30,6 +31,8 @@ public partial class App : System.Windows.Application
 
 
             mainWindow.Show();
+            Updates = new InputOS.Services.ApplicationUpdateService();
+            Updates.Start();
         }
         catch (Exception exception)
         {
@@ -42,6 +45,12 @@ public partial class App : System.Windows.Application
 
             Shutdown();
         }
+    }
+
+    protected override void OnExit(System.Windows.ExitEventArgs e)
+    {
+        Updates?.Stop();
+        base.OnExit(e);
     }
 
     // ============================================================================

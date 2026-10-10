@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 
         Title="InputOS - Paramètres"
-        Icon="Assets/Icons/iOSBlack.ico"
+        Icon="/InputOS;component/Assets/Icons/iOSBlack.ico"
 
         Width="390"
-        Height="440"
+        Height="520"
 
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
@@ -14,7 +14,7 @@
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppForegroundBrush}">
 
-    <Grid Margin="10">
+    <StackPanel Margin="10">
 
 
         <!-- =========================================================================
@@ -64,6 +64,17 @@
              ========================================================================= -->
 
 
-    </Grid>
+        <!-- FONCTIONNALITÉ : MISES À JOUR DE L'APPLICATION -->
+        <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="2" Padding="15" Margin="0,18,0,0">
+            <StackPanel>
+                <TextBlock Text="Mises à jour" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <TextBlock x:Name="UpdateStatusText" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                <Button x:Name="CheckUpdatesButton" Content="Vérifier les mises à jour" Padding="8" Margin="0,0,0,8" Click="CheckUpdatesButton_Click"/>
+                <Button x:Name="RestartForUpdateButton" Content="Redémarrer pour mettre à jour" Padding="8" Visibility="Collapsed" Click="RestartForUpdateButton_Click"/>
+                <TextBlock Text="Les profils locaux et les paramètres sont conservés. Fermez vos configurations en cours avant de redémarrer." TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryTextBrush}" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+        <!-- FIN FONCTIONNALITÉ : MISES À JOUR DE L'APPLICATION -->
+    </StackPanel>
 
 </Window>
