@@ -6,7 +6,7 @@
         mc:Ignorable="d"
 
         Title="InputOS - Test de la manette"
-        Icon="Assets/Icons/iOSWhite.ico"
+        Icon="/InputOS;component/Assets/Icons/iOSWhite.ico"
         Width="850"
         Height="700"
         MinWidth="700"
