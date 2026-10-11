@@ -5,7 +5,7 @@
     <OutputType>WinExe</OutputType>
     <ApplicationIcon>Assets\Icons\iOSBlack.ico</ApplicationIcon>
     <StartupObject>InputOS.Program</StartupObject>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
 
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 

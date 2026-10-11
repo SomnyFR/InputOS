@@ -236,6 +236,7 @@ public partial class ControllerSuggestionWindow
             pair.Value.SetResourceReference(Border.BorderBrushProperty, active ? "AppAccentBrush" : "AppForegroundBrush");
             var label = (TextBlock)pair.Value.Child;
             if (active) label.Foreground = Brushes.White;
+            else if (pair.Value.Tag is System.Windows.Media.Brush color) label.Foreground = color;
             else label.SetResourceReference(TextBlock.ForegroundProperty, "AppForegroundBrush");
         }
     }

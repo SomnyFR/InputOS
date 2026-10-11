@@ -20,7 +20,7 @@ public partial class TesterWindow : Window
     // ---------------------------------------------------------------------------
 
     private readonly RawGameController controller;
-    private readonly ControllerLocalProfile? localProfile;
+    private readonly ControllerLocalProfile? inputProfile;
     private readonly DualSenseMicrophoneReader? localMicrophone;
 
     private readonly DispatcherTimer inputTimer;
@@ -48,8 +48,9 @@ public partial class TesterWindow : Window
         InitializeComponent();
 
         controller = selectedController;
-        localProfile = ControllerLocalProfileService.Load(controller);
-        if (localProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
+        inputProfile = DualSenseProfileService.Load(controller) ?? XboxSeriesProfileService.Load(controller)
+            ?? ControllerLocalProfileService.Load(controller);
+        if (inputProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
 
 
         buttonValues =
@@ -110,7 +111,8 @@ public partial class TesterWindow : Window
 
     private void InitializeControllerInformation()
     {
-        if (localProfile != null) Title = "InputOS - Profil local provisoire";
+        if (inputProfile != null) Title = inputProfile.ValidatedByInputOS
+            ? "InputOS - " + inputProfile.Model + " " + inputProfile.Connection : "InputOS - Profil local provisoire";
         ControllerNameText.Text =
             string.IsNullOrWhiteSpace(controller.DisplayName)
                 ? "Manette"
@@ -123,6 +125,8 @@ public partial class TesterWindow : Window
             $"Boutons : {controller.ButtonCount} | " +
             $"Axes : {controller.AxisCount} | " +
             $"Switches : {controller.SwitchCount}";
+        if (inputProfile?.Buttons.UnavailableButtons.Length > 0)
+            ControllerHardwareText.Text += "\nCommandes non disponibles : " + string.Join(", ", inputProfile.Buttons.UnavailableButtons);
     }
 
     // ============================================================================
@@ -194,11 +198,11 @@ public partial class TesterWindow : Window
         buttonIndicators.Clear();
 
 
-        for (int i = 0; i < (localProfile?.Buttons.Mappings.Length ?? controller.ButtonCount); i++)
+        for (int i = 0; i < (inputProfile?.Buttons.Mappings.Length ?? controller.ButtonCount); i++)
         {
             TextBlock buttonText = new()
             {
-                Text = localProfile?.Buttons.Mappings[i].Name ?? $"B{i}",
+                Text = inputProfile?.Buttons.Mappings[i].Name ?? $"B{i}",
                 TextWrapping = TextWrapping.Wrap,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -280,6 +284,14 @@ public partial class TesterWindow : Window
                 switchValues,
                 axisValues);
 
+            // En Bluetooth, le rapport HID complet fournit les commandes supplémentaires
+            // et un ordre d'axes indépendant du mode de rapport Windows.
+            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless && localMicrophone?.Reading is { } hid)
+            {
+                Array.Copy(hid.ButtonStates, buttonValues, Math.Min(hid.ButtonStates.Length, buttonValues.Length));
+                Array.Copy(hid.AxisValues, axisValues, axisValues.Length);
+                switchValues[0] = Enum.Parse<GameControllerSwitchPosition>(hid.SwitchPositions[0]);
+            }
 
             UpdateButtons();
 
@@ -322,13 +334,13 @@ public partial class TesterWindow : Window
 
     private void UpdateButtons()
     {
-        var reading = localProfile == null ? null : new ControllerDetectionResult(localProfile.Model,
-            localProfile.VendorId, localProfile.ProductId, false, false, Array.Empty<string>(),
+        var reading = inputProfile == null ? null : new ControllerDetectionResult(inputProfile.Model,
+            inputProfile.VendorId, inputProfile.ProductId, false, false, Array.Empty<string>(),
             buttonValues, axisValues, switchValues.Select(value => value.ToString()).ToArray())
             { MicrophonePressed = localMicrophone?.Pressed };
         for (int i = 0; i < buttonIndicators.Count; i++)
         {
-            bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(localProfile!.Buttons.Mappings[i], reading);
+            bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(inputProfile!.Buttons.Mappings[i], reading);
             Border indicator =
                 buttonIndicators[i];
 
@@ -389,11 +401,11 @@ public partial class TesterWindow : Window
 
     private ControllerAxisMapping GetAxisMapping()
     {
-        if (localProfile != null)
-            return new(localProfile.Joysticks.LeftX.AxisIndex, localProfile.Joysticks.LeftY.AxisIndex,
-                localProfile.Joysticks.RightX.AxisIndex, localProfile.Joysticks.RightY.AxisIndex,
-                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
-                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
+        if (inputProfile != null)
+            return new(inputProfile.Joysticks.LeftX.AxisIndex, inputProfile.Joysticks.LeftY.AxisIndex,
+                inputProfile.Joysticks.RightX.AxisIndex, inputProfile.Joysticks.RightY.AxisIndex,
+                inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
+                inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
         if (controller.HardwareVendorId ==
                 MicrosoftVendorId &&
             controller.HardwareProductId ==
@@ -514,12 +526,12 @@ public partial class TesterWindow : Window
 
         double rawValue =
             axisValues[axisIndex];
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var axis = new[] { localProfile.Joysticks.LeftX, localProfile.Joysticks.LeftY,
-                localProfile.Joysticks.RightX, localProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
+            var axis = new[] { inputProfile.Joysticks.LeftX, inputProfile.Joysticks.LeftY,
+                inputProfile.Joysticks.RightX, inputProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
             double value = axis.Normalize(rawValue);
-            return axis == localProfile.Joysticks.LeftY || axis == localProfile.Joysticks.RightY ? -value : value;
+            return axis == inputProfile.Joysticks.LeftY || axis == inputProfile.Joysticks.RightY ? -value : value;
         }
 
 
@@ -537,9 +549,9 @@ public partial class TesterWindow : Window
         }
 
 
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var mapping = localProfile.Buttons.Mappings.FirstOrDefault(m => m.InputType == "Axis" && m.InputIndex == axisIndex);
+            var mapping = inputProfile.Buttons.Mappings.FirstOrDefault(m => m.InputType == "Axis" && m.InputIndex == axisIndex);
             if (mapping?.RestValue is double rest && mapping.PressedValue is double pressed)
                 return Math.Clamp((axisValues[axisIndex] - rest) / (pressed - rest), 0, 1);
         }
@@ -724,12 +736,12 @@ public partial class TesterWindow : Window
 
     private void UpdateDPad()
     {
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var reading = new ControllerDetectionResult(localProfile.Model, localProfile.VendorId,
-                localProfile.ProductId, false, false, Array.Empty<string>(), buttonValues, axisValues,
+            var reading = new ControllerDetectionResult(inputProfile.Model, inputProfile.VendorId,
+                inputProfile.ProductId, false, false, Array.Empty<string>(), buttonValues, axisValues,
                 switchValues.Select(value => value.ToString()).ToArray());
-            var directions = localProfile.Buttons.Mappings.Where(m => m.Id.StartsWith("Dpad", StringComparison.Ordinal))
+            var directions = inputProfile.Buttons.Mappings.Where(m => m.Id.StartsWith("Dpad", StringComparison.Ordinal))
                 .Where(m => ControllerButtonStateService.IsPressed(m, reading)).Select(m => m.Name).ToArray();
             DPadText.Text = directions.Length == 0 ? "Neutre" : string.Join(" + ", directions);
             return;

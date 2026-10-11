@@ -28,8 +28,10 @@ public static class ControllerCompatibilityService
         {
             [(SonyVendorId, 0x05C4)] = "DualShock 4",
             [(SonyVendorId, 0x09CC)] = "DualShock 4",
+            [(SonyVendorId, 0x0CE6)] = "DualSense",
             [(SonyVendorId, 0x0DF2)] = "DualSense Edge",
-            [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2"
+            [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2",
+            [(MicrosoftVendorId, 0x0B12)] = "Xbox Series S/X"
         };
 
 
@@ -60,6 +62,16 @@ public static class ControllerCompatibilityService
     public static bool HasValidatedProfile(
         RawGameController controller)
     {
+        if (controller.HardwareVendorId == MicrosoftVendorId && controller.HardwareProductId == 0x0B12)
+            return HasValidatedProfile(controller.HardwareVendorId, controller.HardwareProductId) &&
+                XboxSeriesProfileService.IsSupported(controller.HardwareVendorId, controller.HardwareProductId,
+                    controller.IsWireless, controller.ButtonCount, controller.AxisCount, controller.SwitchCount);
+
+        if (controller.HardwareVendorId == SonyVendorId && controller.HardwareProductId == 0x0CE6)
+            return HasValidatedProfile(controller.HardwareVendorId, controller.HardwareProductId) &&
+                DualSenseProfileService.IsSupported(controller.HardwareVendorId, controller.HardwareProductId,
+                controller.IsWireless, controller.ButtonCount, controller.AxisCount, controller.SwitchCount);
+
         return HasValidatedProfile(
             controller.HardwareVendorId,
             controller.HardwareProductId);

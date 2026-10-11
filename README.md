@@ -1,5 +1,7 @@
 # InputOS
 
+Current version: **v1.1.1**.
+
 ## Organisation du projet
 
 - `Views/Windows/` : fenêtres principales et testeur.
@@ -30,15 +32,17 @@ The project aims to provide a simple interface for checking controller inputs an
 ### PlayStation
 
 - DualShock 4
+- DualSense over USB and Bluetooth (054C:0CE6)
 - DualSense Edge
 
 ### Xbox
 
 - Xbox Elite Series 2
+- Xbox Series S/X over USB (045E:0B12). Guide and Share are not exposed by the integrated profile.
 
 ### Controllers Without an Official Profile
 
-- DualSense and other controllers detected by Windows can be configured through the guided controller suggestion workflow.
+- Other controllers detected by Windows can be configured through the guided controller suggestion workflow.
 - Xbox One / Series controller detection does not guarantee a validated profile for every model.
 - A compatible local profile enables testing over USB while official support is pending.
 
@@ -48,7 +52,19 @@ The project aims to provide a simple interface for checking controller inputs an
 
 ## ✨ Features
 
-### New in v1.1.0 — Guided Controller Configuration
+### New in v1.1.1
+
+- Integrated DualSense profile (`054C:0CE6`) for USB and Bluetooth, including microphone and touchpad button reading.
+- Integrated Xbox Series S/X USB profile (`045E:0B12`), based on two matching controller diagnostics.
+- Named inputs in the tester, with joystick axes, analog triggers, stick clicks, and D-Pad mappings supplied by the integrated profiles.
+- Redesigned PlayStation and Xbox diagrams in the button configuration workflow: improved silhouettes, balanced control placement, and live button highlighting.
+- Vector PlayStation symbols, an updated touchpad, and Xbox button colors and control icons.
+
+The Xbox Series S/X profile includes 16 mapped commands. **Xbox/Guide and Share are unavailable in the submitted diagnostics** and are listed as unavailable in the tester.
+
+Controller profiles depend on the identifiers and input layout exposed by Windows. The Xbox Series profile currently covers the USB layout from the submitted diagnostics; other connections or hardware revisions may require a separate profile.
+
+### Guided Controller Configuration
 
 When a controller has no compatible profile, InputOS displays a warning and a **Suggest Controller** button.
 
@@ -176,13 +192,23 @@ section of this repository.
 Then run:
 
 ```text
-InputOS-Setup-v1.1.0.exe
+InputOS-Setup-v1.1.1.exe
 ```
 
 ### Upgrading from v1.0.0
 
-Close InputOS using its system tray icon before running `InputOS-Setup-v1.1.0.exe`.
+Close InputOS using its system tray icon before running `InputOS-Setup-v1.1.1.exe`.
 
-The migration installer detects the previous installation and offers to remove it before installing v1.1.0 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
+The migration installer detects the previous installation and offers to remove it before installing v1.1.1 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
 
-Application and installer icons have also been corrected in v1.1.0.
+### Updating from v1.1.0
+
+Once v1.1.1 and its update packages are published in a stable GitHub release, installed copies of v1.1.0 can download the update automatically. The downloaded update is applied on the next launch. You can also check for updates in Settings or run the v1.1.1 installer manually.
+
+The portable version is available as `InputOS-win-Portable.zip` and must be updated manually.
+
+---
+
+## Planned for v1.1.2
+
+**Manual Detection** is planned for v1.1.2 and is not included in v1.1.1.
