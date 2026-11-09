@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using System.IO;
 using System.Text.Json;
 using System.Net.Http;
@@ -45,7 +46,7 @@ public static class ControllerProfileExportService
     public static string CreateJson(ControllerConfigurationDraft draft, bool indented = true)
     {
         if (draft.Detection == null || draft.Joysticks == null || draft.Buttons == null)
-            throw new InvalidOperationException("Terminez la configuration et enregistrez les associations des boutons avant de continuer.");
+            throw new InvalidOperationException(Tr("Terminez la configuration et enregistrez les associations des boutons avant de continuer."));
         // Exporter uniquement les informations utiles à la configuration,
         // sans identifiant de périphérique, chemin local ni nom de compte Windows.
         return JsonSerializer.Serialize(new
@@ -57,6 +58,7 @@ public static class ControllerProfileExportService
             VendorId = draft.VendorId,
             ProductId = draft.ProductId,
             Connection = "USB",
+            draft.Detection.InputReadingFormat,
             ButtonCount = draft.Detection.ButtonStates.Length,
             AxisCount = draft.Detection.AxisValues.Length,
             SwitchCount = draft.Detection.SwitchPositions.Length,

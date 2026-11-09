@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using InputOS.Models;
 
 namespace InputOS.Services;
@@ -17,6 +18,7 @@ public sealed class ControllerButtonConfigurationService
     private readonly double[] restAxes;
     private readonly HashSet<int> joystickAxes;
     private readonly HashSet<int> associatedButtons = new();
+    private readonly Stack<(bool Mapped, int[] Buttons)> history = new();
     public bool WaitingForRelease { get; private set; }
 
     public ControllerButtonConfigurationService(string model, double[] rest,
@@ -43,26 +45,28 @@ public sealed class ControllerButtonConfigurationService
     public void Capture(IReadOnlyList<ControllerDetectionResult> samples)
     {
         if (Current == null) return;
-        if (WaitingForRelease) throw new InvalidOperationException("Relâchez la commande précédente avant de continuer.");
-        if (samples.Count < 8) throw new InvalidOperationException("Maintenez la commande un court instant pour permettre son enregistrement automatique.");
+        if (WaitingForRelease) throw new InvalidOperationException(Tr("Relâchez la commande précédente avant de continuer."));
+        if (samples.Count < 8) throw new InvalidOperationException(Tr("Maintenez la commande un court instant pour permettre son enregistrement automatique."));
         var candidates = samples.Select(FindInput).ToArray();
         if (candidates.Any(input => input.InputType != candidates[0].InputType ||
             input.InputIndex != candidates[0].InputIndex || input.SwitchPosition != candidates[0].SwitchPosition))
-            throw new InvalidOperationException("L’appui n’est pas stable. Maintenez uniquement la commande demandée.");
+            throw new InvalidOperationException(Tr("L’appui n’est pas stable. Maintenez uniquement la commande demandée."));
         var mapping = candidates[^1];
         if (mapping.InputType == "Axis" &&
             samples.Max(sample => sample.AxisValues[mapping.InputIndex]) -
             samples.Min(sample => sample.AxisValues[mapping.InputIndex]) > 0.08)
-            throw new InvalidOperationException("La gâchette bouge encore. Maintenez-la complètement enfoncée pour permettre son enregistrement automatique.");
+            throw new InvalidOperationException(Tr("La gâchette bouge encore. Maintenez-la complètement enfoncée pour permettre son enregistrement automatique."));
         if (Mappings.Any(previous => previous.InputType == mapping.InputType &&
             previous.InputIndex == mapping.InputIndex && previous.SwitchPosition == mapping.SwitchPosition &&
             (mapping.InputType != "Axis" || Math.Sign(previous.PressedValue!.Value - previous.RestValue!.Value) ==
                 Math.Sign(mapping.PressedValue!.Value - mapping.RestValue!.Value))))
-            throw new InvalidOperationException("Cette entrée est déjà associée à une autre commande. Appuyez sur la commande demandée.");
+            throw new InvalidOperationException(Tr("Cette entrée est déjà associée à une autre commande. Appuyez sur la commande demandée."));
         Mappings.Add(mapping);
+        List<int> addedButtons = new();
         foreach (var sample in samples)
             for (int index = 0; index < sample.ButtonStates.Length; index++)
-                if (sample.ButtonStates[index]) associatedButtons.Add(index);
+                if (sample.ButtonStates[index] && associatedButtons.Add(index)) addedButtons.Add(index);
+        history.Push((true, addedButtons.ToArray()));
         Step++;
         WaitingForRelease = true;
     }
@@ -71,7 +75,7 @@ public sealed class ControllerButtonConfigurationService
     {
         var definition = Current!;
         if (reading.AxisValues.Length != restAxes.Length)
-            throw new InvalidOperationException("Le nombre d’axes a changé. Recommencez le test.");
+            throw new InvalidOperationException(Tr("Le nombre d’axes a changé. Recommencez le test."));
         int[] analog = definition.IsTrigger ? Enumerable.Range(0, restAxes.Length)
             .Where(index => !joystickAxes.Contains(index) && Math.Abs(reading.AxisValues[index] - restAxes[index]) > 0.35)
             .ToArray() : Array.Empty<int>();
@@ -88,8 +92,8 @@ public sealed class ControllerButtonConfigurationService
             if (definition.Id == "Microphone" && microphoneOnly)
                 return new(definition.Id, definition.Name, "HidButton", 10, "Bit2");
             if (definition.Id == "Microphone")
-                throw new InvalidOperationException("Le bouton microphone est détecté, mais une autre commande est également active. Relâchez les autres commandes, puis maintenez uniquement Mic.");
-            throw new InvalidOperationException("Relâchez le bouton microphone et maintenez uniquement la commande demandée.");
+                throw new InvalidOperationException(Tr("Le bouton microphone est détecté, mais une autre commande est également active. Relâchez les autres commandes, puis maintenez uniquement Mic."));
+            throw new InvalidOperationException(Tr("Relâchez le bouton microphone et maintenez uniquement la commande demandée."));
         }
         if (analog.Length == 1 && buttons.Length <= 1 && switches.Length == 0)
             return new(definition.Id, definition.Name, "Axis", analog[0],
@@ -97,28 +101,45 @@ public sealed class ControllerButtonConfigurationService
         if (buttons.Length == 1 && switches.Length == 0 && analog.Length == 0)
         {
             if (associatedButtons.Contains(buttons[0]))
-                throw new InvalidOperationException("Cette commande est déjà associée. Relâchez-la et appuyez sur la commande demandée.");
+                throw new InvalidOperationException(Tr("Cette commande est déjà associée. Relâchez-la et appuyez sur la commande demandée."));
             return new(definition.Id, definition.Name, "Button", buttons[0]);
         }
         if (definition.IsDirection && buttons.Length == 0 && switches.Length == 1 && analog.Length == 0 &&
             reading.SwitchPositions[switches[0]] is "Up" or "Down" or "Left" or "Right")
             return new(definition.Id, definition.Name, "Switch", switches[0], reading.SwitchPositions[switches[0]]);
         if (definition.Id == "Microphone" && reading.MicrophonePressed == null && buttons.Length == 0)
-            throw new InvalidOperationException("La lecture du bouton microphone est indisponible. Vérifiez la connexion USB et fermez les autres logiciels de manette, puis recommencez le test. Vous pouvez aussi signaler cette commande comme non détectée.");
-        throw new InvalidOperationException("Appui non identifié ou plusieurs commandes actives. Relâchez tout, puis maintenez uniquement la commande demandée.");
+            throw new InvalidOperationException(Tr("La lecture du bouton microphone est indisponible. Vérifiez la connexion USB et fermez les autres logiciels de manette, puis recommencez le test. Vous pouvez aussi signaler cette commande comme non détectée."));
+        throw new InvalidOperationException(Tr("Appui non identifié ou plusieurs commandes actives. Relâchez tout, puis maintenez uniquement la commande demandée."));
     }
 
     public void Skip()
     {
         if (Current == null) return;
         UnavailableButtons.Add(Current.Name);
+        history.Push((false, Array.Empty<int>()));
         Step++;
         WaitingForRelease = true;
     }
 
+    // Annule la dernière commande associée ou ignorée pour la refaire.
+    public bool GoBack()
+    {
+        if (history.Count == 0) return false;
+        var (mapped, buttons) = history.Pop();
+        if (mapped)
+        {
+            Mappings.RemoveAt(Mappings.Count - 1);
+            foreach (int button in buttons) associatedButtons.Remove(button);
+        }
+        else UnavailableButtons.RemoveAt(UnavailableButtons.Count - 1);
+        Step--;
+        WaitingForRelease = true;
+        return true;
+    }
+
     public ControllerButtonConfiguration GetResult()
     {
-        if (!IsComplete) throw new InvalidOperationException("Le test n’est pas terminé.");
+        if (!IsComplete) throw new InvalidOperationException(Tr("Le test n’est pas terminé."));
         return new(Mappings.ToArray(), UnavailableButtons.ToArray());
     }
 

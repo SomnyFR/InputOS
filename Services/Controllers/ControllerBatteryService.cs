@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -224,7 +225,7 @@ public static class ControllerBatteryService
 
 
             display =
-                $"≈ {percentage} % — Décharge";
+                Tf("≈ {0} % — Décharge", percentage);
 
 
             return true;
@@ -238,7 +239,7 @@ public static class ControllerBatteryService
 
 
             display =
-                $"≈ {percentage} % — En charge";
+                Tf("≈ {0} % — En charge", percentage);
 
 
             return true;
@@ -248,7 +249,7 @@ public static class ControllerBatteryService
         if (batteryValue == 10)
         {
             display =
-                "100 % — En charge";
+                Tr("100 % — En charge");
 
 
             return true;
@@ -258,7 +259,7 @@ public static class ControllerBatteryService
         if (batteryValue == 11)
         {
             display =
-                "100 % — Chargée";
+                Tr("100 % — Chargée");
 
 
             return true;
@@ -268,7 +269,7 @@ public static class ControllerBatteryService
         if (batteryValue == 14)
         {
             display =
-                "Erreur de charge — Température ou tension";
+                Tr("Erreur de charge — Température ou tension");
 
 
             return true;
@@ -278,7 +279,7 @@ public static class ControllerBatteryService
         if (batteryValue == 15)
         {
             display =
-                "Erreur de charge";
+                Tr("Erreur de charge");
 
 
             return true;
@@ -286,7 +287,7 @@ public static class ControllerBatteryService
 
 
         display =
-            "État de charge inconnu";
+            Tr("État de charge inconnu");
 
 
         return true;

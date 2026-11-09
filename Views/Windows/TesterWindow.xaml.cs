@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -20,8 +21,10 @@ public partial class TesterWindow : Window
     // ---------------------------------------------------------------------------
 
     private readonly RawGameController controller;
-    private readonly ControllerLocalProfile? localProfile;
+    private readonly ControllerLocalProfile? inputProfile;
     private readonly DualSenseMicrophoneReader? localMicrophone;
+    private readonly NintendoProControllerReader? nintendoReader;
+    private readonly long nintendoStartedAt = Environment.TickCount64;
 
     private readonly DispatcherTimer inputTimer;
 
@@ -48,8 +51,11 @@ public partial class TesterWindow : Window
         InitializeComponent();
 
         controller = selectedController;
-        localProfile = ControllerLocalProfileService.Load(controller);
-        if (localProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
+        inputProfile = DualSenseProfileService.Load(controller) ?? XboxSeriesProfileService.Load(controller)
+            ?? ControllerLocalProfileService.Load(controller);
+        if (inputProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
+        if (inputProfile != null && NintendoProControllerReader.IsSupported(controller))
+            nintendoReader = new NintendoProControllerReader(controller);
 
 
         buttonValues =
@@ -110,19 +116,18 @@ public partial class TesterWindow : Window
 
     private void InitializeControllerInformation()
     {
-        if (localProfile != null) Title = "InputOS - Profil local provisoire";
+        if (inputProfile != null) Title = inputProfile.ValidatedByInputOS
+            ? "InputOS - " + inputProfile.Model + " " + inputProfile.Connection : Tr("InputOS - Profil local provisoire");
         ControllerNameText.Text =
-            string.IsNullOrWhiteSpace(controller.DisplayName)
-                ? "Manette"
-                : controller.DisplayName;
+            ControllerCompatibilityService.GetControllerDisplayName(controller);
 
 
         ControllerHardwareText.Text =
-            $"VID : {controller.HardwareVendorId:X4} | " +
-            $"PID : {controller.HardwareProductId:X4} | " +
-            $"Boutons : {controller.ButtonCount} | " +
-            $"Axes : {controller.AxisCount} | " +
-            $"Switches : {controller.SwitchCount}";
+            Tf("VID : {0} | PID : {1} | Boutons : {2} | Axes : {3} | Switches : {4}",
+                controller.HardwareVendorId.ToString("X4"), controller.HardwareProductId.ToString("X4"),
+                controller.ButtonCount, controller.AxisCount, controller.SwitchCount);
+        if (inputProfile?.Buttons.UnavailableButtons.Length > 0)
+            ControllerHardwareText.Text += Tr("\nCommandes non disponibles : ") + string.Join(", ", inputProfile.Buttons.UnavailableButtons.Select(Tr));
     }
 
     // ============================================================================
@@ -178,9 +183,9 @@ public partial class TesterWindow : Window
     // CONFIGURATION
     // ---------------------------------------------------------------------------
 
-    private const double ButtonWidth = 65;
+    private const double ButtonWidth = 118;
 
-    private const double ButtonHeight = 55;
+    private const double ButtonHeight = 92;
 
 
     // ---------------------------------------------------------------------------
@@ -194,16 +199,42 @@ public partial class TesterWindow : Window
         buttonIndicators.Clear();
 
 
-        for (int i = 0; i < (localProfile?.Buttons.Mappings.Length ?? controller.ButtonCount); i++)
+        for (int i = 0; i < (inputProfile?.Buttons.Mappings.Length ?? controller.ButtonCount); i++)
         {
             TextBlock buttonText = new()
             {
-                Text = localProfile?.Buttons.Mappings[i].Name ?? $"B{i}",
+                Text = inputProfile != null ? Tr(inputProfile.Buttons.Mappings[i].Name) : $"B{i}",
                 TextWrapping = TextWrapping.Wrap,
+                TextAlignment = TextAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                FontSize = 14
+                FontSize = inputProfile == null ? 14 : 10.5
             };
+
+
+            UIElement buttonContent = buttonText;
+
+            if (inputProfile != null)
+            {
+                StackPanel content = new()
+                {
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                FrameworkElement icon =
+                    ControllerButtonIconService.Create(
+                        inputProfile.Buttons.Mappings[i].Id,
+                        inputProfile.Model,
+                        buttonText.Text);
+
+                icon.HorizontalAlignment = HorizontalAlignment.Center;
+                icon.Margin = new Thickness(0, 0, 0, 5);
+
+                content.Children.Add(icon);
+                content.Children.Add(buttonText);
+
+                buttonContent = content;
+            }
 
 
             Border buttonBorder = new()
@@ -218,17 +249,22 @@ public partial class TesterWindow : Window
                     new Thickness(1),
 
                 BorderBrush =
-                    Brushes.Gray,
+                    (System.Windows.Media.Brush)FindResource("AppBorderBrush"),
 
                 Background =
-                    Brushes.White,
+                    (System.Windows.Media.Brush)FindResource("AppCardHoverBrush"),
 
                 CornerRadius =
-                    new CornerRadius(8),
+                    new CornerRadius(10),
 
                 Child =
-                    buttonText
+                    buttonContent
             };
+
+
+            System.Windows.Documents.TextElement.SetForeground(
+                buttonBorder,
+                (System.Windows.Media.Brush)FindResource("AppForegroundBrush"));
 
 
             buttonIndicators.Add(
@@ -275,11 +311,37 @@ public partial class TesterWindow : Window
 
         try
         {
-            controller.GetCurrentReading(
-                buttonValues,
-                switchValues,
-                axisValues);
+            if (nintendoReader != null)
+            {
+                if (nintendoReader.Reading is not { } reading)
+                {
+                    Array.Clear(buttonValues);
+                    Array.Fill(switchValues, GameControllerSwitchPosition.Center);
+                    UpdateButtons();
+                    CenterStickPoints();
+                    if (Environment.TickCount64 - nintendoStartedAt < 4500) return;
+                    inputTimer.Stop();
+                    Title = Tr("InputOS - Lecture Nintendo indisponible : rebranchez la manette en USB");
+                    return;
+                }
+                Array.Copy(reading.ButtonStates, buttonValues, buttonValues.Length);
+                Array.Copy(reading.AxisValues, axisValues, axisValues.Length);
+                for (int i = 0; i < switchValues.Length; i++)
+                    switchValues[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+            }
+            else
+            {
+                controller.GetCurrentReading(buttonValues, switchValues, axisValues);
+            }
 
+            // En Bluetooth, le rapport HID complet fournit les commandes supplémentaires
+            // et un ordre d'axes indépendant du mode de rapport Windows.
+            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless && localMicrophone?.Reading is { } hid)
+            {
+                Array.Copy(hid.ButtonStates, buttonValues, Math.Min(hid.ButtonStates.Length, buttonValues.Length));
+                Array.Copy(hid.AxisValues, axisValues, axisValues.Length);
+                switchValues[0] = Enum.Parse<GameControllerSwitchPosition>(hid.SwitchPositions[0]);
+            }
 
             UpdateButtons();
 
@@ -294,7 +356,7 @@ public partial class TesterWindow : Window
             inputTimer.Stop();
 
             Title =
-                "InputOS - Manette déconnectée";
+                Tr("InputOS - Manette déconnectée");
         }
     }
 
@@ -322,27 +384,30 @@ public partial class TesterWindow : Window
 
     private void UpdateButtons()
     {
-        var reading = localProfile == null ? null : new ControllerDetectionResult(localProfile.Model,
-            localProfile.VendorId, localProfile.ProductId, false, false, Array.Empty<string>(),
+        var reading = inputProfile == null ? null : new ControllerDetectionResult(inputProfile.Model,
+            inputProfile.VendorId, inputProfile.ProductId, false, false, Array.Empty<string>(),
             buttonValues, axisValues, switchValues.Select(value => value.ToString()).ToArray())
             { MicrophonePressed = localMicrophone?.Pressed };
         for (int i = 0; i < buttonIndicators.Count; i++)
         {
-            bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(localProfile!.Buttons.Mappings[i], reading);
+            bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(inputProfile!.Buttons.Mappings[i], reading);
             Border indicator =
                 buttonIndicators[i];
 
 
+            // Appuyé : fond cyan sombre, pour que les icônes colorées restent lisibles.
             indicator.Background =
                 pressed
-                    ? Brushes.LightGray
-                    : Brushes.White;
+                    ? new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(0x0E, 0x4A, 0x5C))
+                    : (System.Windows.Media.Brush)FindResource("AppCardHoverBrush");
 
 
             indicator.BorderBrush =
-                pressed
-                    ? Brushes.Black
-                    : Brushes.Gray;
+                (System.Windows.Media.Brush)FindResource(
+                    pressed
+                        ? "AppAccentBrush"
+                        : "AppBorderBrush");
 
 
             indicator.BorderThickness =
@@ -389,11 +454,11 @@ public partial class TesterWindow : Window
 
     private ControllerAxisMapping GetAxisMapping()
     {
-        if (localProfile != null)
-            return new(localProfile.Joysticks.LeftX.AxisIndex, localProfile.Joysticks.LeftY.AxisIndex,
-                localProfile.Joysticks.RightX.AxisIndex, localProfile.Joysticks.RightY.AxisIndex,
-                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
-                localProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
+        if (inputProfile != null)
+            return new(inputProfile.Joysticks.LeftX.AxisIndex, inputProfile.Joysticks.LeftY.AxisIndex,
+                inputProfile.Joysticks.RightX.AxisIndex, inputProfile.Joysticks.RightY.AxisIndex,
+                inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
+                inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
         if (controller.HardwareVendorId ==
                 MicrosoftVendorId &&
             controller.HardwareProductId ==
@@ -514,12 +579,12 @@ public partial class TesterWindow : Window
 
         double rawValue =
             axisValues[axisIndex];
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var axis = new[] { localProfile.Joysticks.LeftX, localProfile.Joysticks.LeftY,
-                localProfile.Joysticks.RightX, localProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
+            var axis = new[] { inputProfile.Joysticks.LeftX, inputProfile.Joysticks.LeftY,
+                inputProfile.Joysticks.RightX, inputProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
             double value = axis.Normalize(rawValue);
-            return axis == localProfile.Joysticks.LeftY || axis == localProfile.Joysticks.RightY ? -value : value;
+            return axis == inputProfile.Joysticks.LeftY || axis == inputProfile.Joysticks.RightY ? -value : value;
         }
 
 
@@ -537,9 +602,9 @@ public partial class TesterWindow : Window
         }
 
 
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var mapping = localProfile.Buttons.Mappings.FirstOrDefault(m => m.InputType == "Axis" && m.InputIndex == axisIndex);
+            var mapping = inputProfile.Buttons.Mappings.FirstOrDefault(m => m.InputType == "Axis" && m.InputIndex == axisIndex);
             if (mapping?.RestValue is double rest && mapping.PressedValue is double pressed)
                 return Math.Clamp((axisValues[axisIndex] - rest) / (pressed - rest), 0, 1);
         }
@@ -724,20 +789,20 @@ public partial class TesterWindow : Window
 
     private void UpdateDPad()
     {
-        if (localProfile != null)
+        if (inputProfile != null)
         {
-            var reading = new ControllerDetectionResult(localProfile.Model, localProfile.VendorId,
-                localProfile.ProductId, false, false, Array.Empty<string>(), buttonValues, axisValues,
+            var reading = new ControllerDetectionResult(inputProfile.Model, inputProfile.VendorId,
+                inputProfile.ProductId, false, false, Array.Empty<string>(), buttonValues, axisValues,
                 switchValues.Select(value => value.ToString()).ToArray());
-            var directions = localProfile.Buttons.Mappings.Where(m => m.Id.StartsWith("Dpad", StringComparison.Ordinal))
-                .Where(m => ControllerButtonStateService.IsPressed(m, reading)).Select(m => m.Name).ToArray();
-            DPadText.Text = directions.Length == 0 ? "Neutre" : string.Join(" + ", directions);
+            var directions = inputProfile.Buttons.Mappings.Where(m => m.Id.StartsWith("Dpad", StringComparison.Ordinal))
+                .Where(m => ControllerButtonStateService.IsPressed(m, reading)).Select(m => Tr(m.Name)).ToArray();
+            DPadText.Text = directions.Length == 0 ? Tr("Neutre") : string.Join(" + ", directions);
             return;
         }
         if (switchValues.Length == 0)
         {
             DPadText.Text =
-                "Non disponible";
+                Tr("Non disponible");
 
             return;
         }
@@ -747,31 +812,31 @@ public partial class TesterWindow : Window
             switchValues[0] switch
             {
                 GameControllerSwitchPosition.Center =>
-                    "Neutre",
+                    Tr("Neutre"),
 
                 GameControllerSwitchPosition.Up =>
-                    "Haut",
+                    Tr("Haut"),
 
                 GameControllerSwitchPosition.UpRight =>
-                    "Haut + Droite",
+                    Tr("Haut + Droite"),
 
                 GameControllerSwitchPosition.Right =>
-                    "Droite",
+                    Tr("Droite"),
 
                 GameControllerSwitchPosition.DownRight =>
-                    "Bas + Droite",
+                    Tr("Bas + Droite"),
 
                 GameControllerSwitchPosition.Down =>
-                    "Bas",
+                    Tr("Bas"),
 
                 GameControllerSwitchPosition.DownLeft =>
-                    "Bas + Gauche",
+                    Tr("Bas + Gauche"),
 
                 GameControllerSwitchPosition.Left =>
-                    "Gauche",
+                    Tr("Gauche"),
 
                 GameControllerSwitchPosition.UpLeft =>
-                    "Haut + Gauche",
+                    Tr("Haut + Gauche"),
 
                 _ =>
                     switchValues[0].ToString()
@@ -804,6 +869,7 @@ public partial class TesterWindow : Window
         EventArgs e)
     {
         localMicrophone?.Dispose();
+        nintendoReader?.Dispose();
         inputTimer.Stop();
 
         inputTimer.Tick -=

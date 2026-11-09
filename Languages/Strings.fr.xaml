@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="Settings.Title">InputOS - Paramètres</sys:String>
+    <sys:String x:Key="Settings.Heading">Paramètres</sys:String>
+    <sys:String x:Key="Settings.Language.Section">LANGUE</sys:String>
+    <sys:String x:Key="Settings.Language.Label">Langue de l'interface</sys:String>
+    <sys:String x:Key="Settings.Language.Note">La nouvelle langue s'applique après le redémarrage d'InputOS. Le français est la langue de référence.</sys:String>
+    <sys:String x:Key="Settings.Language.RestartTitle">Langue modifiée</sys:String>
+    <sys:String x:Key="Settings.Language.RestartMessage">Redémarrer InputOS maintenant pour appliquer la langue ?&#10;&#10;Oui : redémarrer maintenant.&#10;Non : appliquer plus tard (au prochain lancement).</sys:String>
+    <sys:String x:Key="Settings.Window.Section">FENÊTRE</sys:String>
+    <sys:String x:Key="Settings.Window.CloseToTray">Minimiser en arrière-plan</sys:String>
+    <sys:String x:Key="Settings.Updates.Section">MISES À JOUR</sys:String>
+    <sys:String x:Key="Settings.Updates.Check">Vérifier les mises à jour</sys:String>
+    <sys:String x:Key="Settings.Updates.Restart">Redémarrer pour mettre à jour</sys:String>
+    <sys:String x:Key="Settings.Updates.Note">Les profils locaux et les paramètres sont conservés. Fermez vos configurations en cours avant de redémarrer.</sys:String>
+    <sys:String x:Key="Settings.Cache.Section">CACHE</sys:String>
+    <sys:String x:Key="Settings.Cache.Profiles">Profils enregistrés</sys:String>
+    <sys:String x:Key="Settings.Cache.Logs">Journaux Debug</sys:String>
+    <sys:String x:Key="Settings.Cache.NoLogs">Aucun journal n'est écrit par l'application.</sys:String>
+    <sys:String x:Key="Settings.Cache.Delete">Supprimer</sys:String>
+    <sys:String x:Key="Settings.Cache.Misc">Paramètres divers</sys:String>
+</ResourceDictionary>

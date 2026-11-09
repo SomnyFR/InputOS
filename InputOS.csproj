@@ -5,7 +5,7 @@
     <OutputType>WinExe</OutputType>
     <ApplicationIcon>Assets\Icons\iOSBlack.ico</ApplicationIcon>
     <StartupObject>InputOS.Program</StartupObject>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
 
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 
@@ -37,6 +37,23 @@
     <Resource Include="Assets\Icons\InputOSBlack.png" />
 
     <Resource Include="Assets\Icons\InputOSWhite.png" />
+
+    <Resource Include="Assets\Images\bluetooth.png" />
+
+    <Resource Include="Assets\Images\dualsense.png" />
+
+    <Resource Include="Assets\Images\ps4-controller.png" />
+
+    <Resource Include="Assets\Images\xbox-controller.png" />
+
+    <!-- Calques du schéma DualSense (base-white, bumper, buttons, dpad, select, start, sticks, triggers) -->
+    <Resource Include="Assets\Images\DualSense\*.png" />
+
+    <!-- Calques du schéma Xbox (même principe que DualSense) -->
+    <Resource Include="Assets\Images\Xbox\*.svg" />
+
+    <!-- Calques du schéma DualShock 4 -->
+    <Resource Include="Assets\Images\DualShock4\*.svg" />
 
   </ItemGroup>
 

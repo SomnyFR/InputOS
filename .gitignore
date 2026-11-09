@@ -534,5 +534,8 @@ Publish/zh-Hant/WindowsFormsIntegration.resources.dll
 Installer/
 Releases/
 Cloudflare/
-Packaging/
 
+Packaging/Build-MigrationSetup.ps1
+Packaging/Build-Release.ps1
+Packaging/InputOS-Migration.iss
+Packaging/README.md

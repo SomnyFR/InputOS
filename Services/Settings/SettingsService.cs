@@ -109,6 +109,14 @@ public static class SettingsService
             json);
     }
 
+    public static long GetSize() =>
+        File.Exists(SettingsFilePath) ? new FileInfo(SettingsFilePath).Length : 0;
+
+    public static void Delete()
+    {
+        File.Delete(SettingsFilePath);
+    }
+
     // ============================================================================
     // FIN FONCTIONNALITÉ : ENREGISTREMENT DES PARAMÈTRES
     // ============================================================================

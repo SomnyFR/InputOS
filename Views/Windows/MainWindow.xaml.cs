@@ -1,4 +1,5 @@
-﻿using System;
+﻿using static InputOS.Services.LocalizationService;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -12,6 +13,52 @@ namespace InputOS;
 
 public partial class MainWindow : Window
 {
+
+    // Illustration de la carte d'une manette ; null = icône générique.
+    public static readonly DependencyProperty CardImageProperty =
+        DependencyProperty.RegisterAttached(
+            "CardImage",
+            typeof(System.Windows.Media.ImageSource),
+            typeof(MainWindow),
+            new PropertyMetadata(null));
+
+    public static void SetCardImage(DependencyObject element, System.Windows.Media.ImageSource? value) =>
+        element.SetValue(CardImageProperty, value);
+
+    public static System.Windows.Media.ImageSource? GetCardImage(DependencyObject element) =>
+        (System.Windows.Media.ImageSource?)element.GetValue(CardImageProperty);
+
+    private static readonly Dictionary<string, System.Windows.Media.ImageSource> controllerImages = new();
+
+    // Association unique modèle -> illustration, partagée par la liste et le panneau d'informations.
+    private static System.Windows.Media.ImageSource? GetControllerImage(
+        RawGameController controller)
+    {
+        string? file =
+            controller.HardwareVendorId switch
+            {
+                0x054C when controller.HardwareProductId is 0x05C4 or 0x09CC => "ps4-controller.png",
+                0x054C when controller.HardwareProductId == 0x0CE6 => "dualsense.png",
+                0x045E => "xbox-controller.png",
+                _ => null
+            };
+
+        if (file == null) return null;
+
+        if (!controllerImages.TryGetValue(file, out var image))
+        {
+            System.Windows.Media.Imaging.BitmapImage bitmap = new();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri($"pack://application:,,,/InputOS;component/Assets/Images/{file}");
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            controllerImages[file] = image = bitmap;
+        }
+
+        return image;
+    }
+
 
     // ============================================================================
     // FONCTIONNALITÉ : INITIALISATION DE L'APPLICATION
@@ -89,11 +136,11 @@ public partial class MainWindow : Window
 
 
         System.Windows.Forms.ToolStripMenuItem openItem =
-            new("Ouvrir InputOS");
+            new(Tr("Ouvrir InputOS"));
 
 
         System.Windows.Forms.ToolStripMenuItem quitItem =
-            new("Quitter InputOS");
+            new(Tr("Quitter InputOS"));
 
 
         openItem.Click +=
@@ -275,18 +322,18 @@ public partial class MainWindow : Window
             detectedControllerCount switch
             {
                 0 =>
-                    "0 manette",
+                    Tr("0 manette"),
 
                 1 =>
-                    "1 manette",
+                    Tr("1 manette"),
 
                 _ =>
-                    $"{detectedControllerCount} manettes"
+                    Tf("{0} manettes", detectedControllerCount)
             };
 
 
         string tooltip =
-            $"InputOS - {controllerText}";
+            Tf("InputOS - {0}", controllerText);
 
 
         if (!string.IsNullOrWhiteSpace(
@@ -346,7 +393,7 @@ public partial class MainWindow : Window
             new()
             {
                 Header =
-                    "Manettes",
+                    Tr("Manettes"),
 
                 IsExpanded =
                     true
@@ -373,6 +420,11 @@ public partial class MainWindow : Window
                 };
 
 
+            SetCardImage(
+                controllerItem,
+                GetControllerImage(controller));
+
+
             controllersRoot.Items.Add(
                 controllerItem);
 
@@ -387,7 +439,7 @@ public partial class MainWindow : Window
                 new()
                 {
                     Header =
-                        "Aucune manette détectée",
+                        Tr("Aucune manette détectée"),
 
                     IsEnabled =
                         false
@@ -407,13 +459,13 @@ public partial class MainWindow : Window
             detectedControllerCount switch
             {
                 0 =>
-                    "Aucune manette détectée",
+                    Tr("Aucune manette détectée"),
 
                 1 =>
-                    "1 manette détectée",
+                    Tr("1 manette détectée"),
 
                 _ =>
-                    $"{detectedControllerCount} manettes détectées"
+                    Tf("{0} manettes détectées", detectedControllerCount)
             };
 
 
@@ -475,18 +527,39 @@ public partial class MainWindow : Window
     // LOGIQUE
     // ---------------------------------------------------------------------------
 
-    private void RefreshButton_Click(
+    private async void RefreshButton_Click(
         object sender,
         RoutedEventArgs e)
     {
+        if (RefreshProgressBar.Visibility == Visibility.Visible)
+            return;
+
+
         StatusText.Text =
-            "Actualisation des périphériques...";
+            Tr("Actualisation des périphériques...");
 
 
-        ClearControllerInformation();
+        RefreshProgressBar.Visibility =
+            Visibility.Visible;
 
 
-        RefreshControllerList();
+        // Laisse WPF afficher la barre avant la lecture (synchrone) des manettes.
+        await System.Windows.Threading.Dispatcher.Yield(
+            System.Windows.Threading.DispatcherPriority.Render);
+
+
+        try
+        {
+            ClearControllerInformation();
+
+
+            RefreshControllerList();
+        }
+        finally
+        {
+            RefreshProgressBar.Visibility =
+                Visibility.Collapsed;
+        }
     }
 
     // ============================================================================
@@ -559,8 +632,8 @@ public partial class MainWindow : Window
         TesterButton.IsEnabled =
             ControllerCompatibilityService.HasValidatedProfile(controller) || localProfile != null;
         ControllerCompatibilityWarningText.Text = localProfile != null
-            ? "Profil local provisoire actif. Un profil officiel prendra la priorité lorsqu’il sera disponible."
-            : "Manette non compatible. Aidez-nous à l’ajouter à InputOS.";
+            ? Tr("Profil local provisoire actif. Un profil officiel prendra la priorité lorsqu’il sera disponible.")
+            : Tr("Manette non compatible. Aidez-nous à l’ajouter à InputOS.");
 
 
         ControllerCompatibilityWarning.Visibility =
@@ -574,6 +647,10 @@ public partial class MainWindow : Window
                 controller);
 
 
+        UpdateDeviceImage(
+            controller);
+
+
         DeviceTypeText.Text =
             ControllerCompatibilityService.GetControllerType(
                 controller);
@@ -581,8 +658,8 @@ public partial class MainWindow : Window
 
         DeviceConnectionText.Text =
             controller.IsWireless
-                ? "Sans fil"
-                : "Filaire";
+                ? Tr("Sans fil")
+                : Tr("Filaire");
 
 
         DeviceVidText.Text =
@@ -602,19 +679,19 @@ public partial class MainWindow : Window
 
 
         DeviceFirmwareText.Text =
-            "Non disponible";
+            Tr("Non disponible");
 
 
         DeviceBatteryText.Text =
-            "Lecture...";
+            Tr("Lecture...");
 
 
         DeviceStatusText.Text =
-            "Connectée";
+            Tr("Connectée");
 
 
         StatusText.Text =
-            $"{ControllerCompatibilityService.GetControllerDisplayName(controller)} sélectionnée";
+            Tf("{0} sélectionnée", ControllerCompatibilityService.GetControllerDisplayName(controller));
 
 
         string? batteryDisplay =
@@ -630,7 +707,7 @@ public partial class MainWindow : Window
         {
             DeviceBatteryText.Text =
                 batteryDisplay ??
-                "Non disponible";
+                Tr("Non disponible");
         }
 
 
@@ -638,8 +715,31 @@ public partial class MainWindow : Window
     }
 
 
+    private void UpdateDeviceImage(
+        RawGameController controller)
+    {
+        DeviceImage.Source =
+            GetControllerImage(
+                controller);
+
+
+        DeviceImage.Visibility =
+            DeviceImage.Source == null
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+    }
+
+
     private void ClearControllerInformation()
     {
+        DeviceImage.Source =
+            null;
+
+
+        DeviceImage.Visibility =
+            Visibility.Collapsed;
+
+
         TesterButton.IsEnabled =
             false;
 
@@ -677,15 +777,15 @@ public partial class MainWindow : Window
 
 
         DeviceFirmwareText.Text =
-            "Non disponible";
+            Tr("Non disponible");
 
 
         DeviceBatteryText.Text =
-            "Non disponible";
+            Tr("Non disponible");
 
 
         DeviceStatusText.Text =
-            "Aucun périphérique sélectionné";
+            Tr("Aucun périphérique sélectionné");
     }
 
     // ============================================================================
@@ -721,8 +821,8 @@ public partial class MainWindow : Window
         {
             MessageBox.Show(
                 this,
-                "Pour suggérer cette manette, branchez-la avec un câble USB, puis sélectionnez sa connexion filaire dans InputOS.",
-                "Connexion filaire requise",
+                Tr("Pour suggérer cette manette, branchez-la avec un câble USB, puis sélectionnez sa connexion filaire dans InputOS."),
+                Tr("Connexion filaire requise"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
 
@@ -767,7 +867,7 @@ public partial class MainWindow : Window
                 is not RawGameController controller)
         {
             MessageBox.Show(
-                "Sélectionnez d'abord une manette.",
+                Tr("Sélectionnez d'abord une manette."),
                 "InputOS",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);

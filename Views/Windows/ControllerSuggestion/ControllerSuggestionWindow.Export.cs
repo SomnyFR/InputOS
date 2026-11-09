@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using System.Windows;
 using InputOS.Services;
 
@@ -17,11 +18,11 @@ public partial class ControllerSuggestionWindow
         try
         {
             string path = ControllerProfileExportService.SaveToProfilesDirectory(PendingConfiguration);
-            ProfileExportFeedbackText.Text = $"Profil enregistré : {path}\nCe fichier sera conservé après la fermeture de cette fenêtre. Il reste à valider par les développeurs avant son intégration dans InputOS.";
+            ProfileExportFeedbackText.Text = Tf("Profil enregistré : {0}\nCe fichier sera conservé après la fermeture de cette fenêtre. Il reste à valider par les développeurs avant son intégration dans InputOS.", path);
         }
         catch (Exception)
         {
-            ProfileExportFeedbackText.Text = "Impossible d’enregistrer le profil. Vérifiez l’accès à Documents\\InputOS\\profils et réessayez.";
+            ProfileExportFeedbackText.Text = Tr("Impossible d’enregistrer le profil. Vérifiez l’accès à Documents\\InputOS\\profils et réessayez.");
         }
     }
 
@@ -30,19 +31,19 @@ public partial class ControllerSuggestionWindow
         if (PendingConfiguration?.Buttons == null) return;
         var draft = PendingConfiguration;
         SendDiagnosticButton.IsEnabled = false;
-        ProfileExportFeedbackText.Text = "Envoi du diagnostic en cours…";
+        ProfileExportFeedbackText.Text = Tr("Envoi du diagnostic en cours…");
         try
         {
             string json = ControllerProfileExportService.CreateJson(draft, false);
             if (sentDiagnostic == json)
             {
-                ProfileExportFeedbackText.Text = "Ce diagnostic a déjà été envoyé aux développeurs.";
+                ProfileExportFeedbackText.Text = Tr("Ce diagnostic a déjà été envoyé aux développeurs.");
                 return;
             }
             int issueNumber = await ControllerDiagnosticService.SendAsync(draft, diagnosticCancellation.Token);
             sentDiagnostic = json;
             if (!isClosed && ReferenceEquals(draft, PendingConfiguration))
-                ProfileExportFeedbackText.Text = $"Diagnostic envoyé aux développeurs. Référence GitHub : #{issueNumber}. Merci pour votre contribution !";
+                ProfileExportFeedbackText.Text = Tf("Diagnostic envoyé aux développeurs. Référence GitHub : #{0}. Merci pour votre contribution !", issueNumber);
         }
         catch (InvalidOperationException exception)
         {
@@ -50,11 +51,11 @@ public partial class ControllerSuggestionWindow
         }
         catch (OperationCanceledException)
         {
-            if (!isClosed) ProfileExportFeedbackText.Text = "L’envoi n’a pas été confirmé dans le délai prévu. Réessayez plus tard : un diagnostic identique ne créera pas une nouvelle issue.";
+            if (!isClosed) ProfileExportFeedbackText.Text = Tr("L’envoi n’a pas été confirmé dans le délai prévu. Réessayez plus tard : un diagnostic identique ne créera pas une nouvelle issue.");
         }
         catch (Exception)
         {
-            if (!isClosed) ProfileExportFeedbackText.Text = "Impossible d’envoyer le diagnostic. Vérifiez votre connexion Internet et réessayez. Vous pouvez enregistrer votre profil localement.";
+            if (!isClosed) ProfileExportFeedbackText.Text = Tr("Impossible d’envoyer le diagnostic. Vérifiez votre connexion Internet et réessayez. Vous pouvez enregistrer votre profil localement.");
         }
         finally
         {

@@ -49,12 +49,15 @@ public static class ControllerButtonCatalogService
         Add("RightStick", "R3 — clic du joystick droit", "R3", joyCon ? 365 : 300, 215);
         Add("MenuLeft", ps ? model == "DualShock 4" ? "Share" : "Create" : nintendo ? "Moins (−)" : model == "Xbox 360" ? "Back" : "View", ps ? "S" : nintendo ? "−" : "V", joyCon ? 145 : 205, joyCon ? 90 : 145);
         Add("MenuRight", ps ? "Options" : nintendo ? "Plus (+)" : model == "Xbox 360" ? "Start" : "Menu", ps ? "O" : nintendo ? "+" : "M", joyCon ? 335 : 275, joyCon ? 90 : 145);
-        Add("Home", ps ? "PS" : nintendo ? "Home" : "Xbox / Guide", ps ? "PS" : nintendo ? "H" : "X", joyCon ? 380 : 240, joyCon ? 275 : family == "Xbox" ? 100 : 190);
+        // Bouton Xbox / Guide (allumage de la manette) : détection retirée du parcours Suggérer pour les Xbox.
+        if (family != "Xbox")
+            Add("Home", ps ? "PS" : nintendo ? "Home" : "Xbox / Guide", ps ? "PS" : nintendo ? "H" : "X", joyCon ? 380 : 240, joyCon ? 275 : 190);
 
         if (ps)
         {
             Add("Touchpad", "Appui sur le pavé tactile", "Touch", 240, 100);
-            if (model != "DualShock 4") Add("Microphone", "Bouton microphone", "Mic", 240, 225);
+            // Détection du bouton microphone retirée du parcours Suggérer.
+            // if (model != "DualShock 4") Add("Microphone", "Bouton microphone", "Mic", 240, 225);
             if (model == "DualSense Edge")
             {
                 Add("FnLeft", "Fn gauche", "FnG", 175, 260);
