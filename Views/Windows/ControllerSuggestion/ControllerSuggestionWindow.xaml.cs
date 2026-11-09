@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using static InputOS.Services.LocalizationService;
+using System.Windows;
 using System.Windows.Controls;
 using InputOS.Models;
 using InputOS.Services;
@@ -17,8 +18,8 @@ public partial class ControllerSuggestionWindow : Window
     // CONFIGURATION
     // ---------------------------------------------------------------------------
 
-    private const string OtherModel =
-        "Autre modèle";
+    private static readonly string OtherModel =
+        Tr("Autre modèle");
 
 
     // Le choix du nom ne change pas la compatibilité du périphérique.
@@ -62,6 +63,7 @@ public partial class ControllerSuggestionWindow : Window
     private System.Threading.CancellationTokenSource? detectionCancellation;
 
     private bool isClosed;
+    private NintendoProControllerReader? nintendoReader;
 
     private ControllerButtonConfigurationService? buttonTest;
     private ControllerButtonDefinition[] buttonDefinitions = Array.Empty<ControllerButtonDefinition>();
@@ -92,8 +94,9 @@ public partial class ControllerSuggestionWindow : Window
 
 
         ControllerInformationText.Text =
-            $"Manette connectée : {ControllerCompatibilityService.GetControllerDisplayName(controller)}\n" +
-            $"VID : {controller.HardwareVendorId:X4} | PID : {controller.HardwareProductId:X4}";
+            Tf("Manette connectée : {0}\nVID : {1} | PID : {2}",
+                ControllerCompatibilityService.GetControllerDisplayName(controller),
+                controller.HardwareVendorId.ToString("X4"), controller.HardwareProductId.ToString("X4"));
 
 
         ControllerModelComboBox.ItemsSource =
@@ -167,9 +170,9 @@ public partial class ControllerSuggestionWindow : Window
         ConfigurationNameText.Text =
             ConfigurationName == null
                 ? selectedModel == OtherModel
-                    ? "Saisissez le nom du modèle."
-                    : "Sélectionnez un modèle."
-                : $"Nom de la configuration : {ConfigurationName}";
+                    ? Tr("Saisissez le nom du modèle.")
+                    : Tr("Sélectionnez un modèle.")
+                : Tf("Nom de la configuration : {0}", ConfigurationName);
 
 
         NextButton.IsEnabled =
@@ -201,9 +204,10 @@ public partial class ControllerSuggestionWindow : Window
 
 
         ConfigurationSummaryText.Text =
-            $"Configuration : {PendingConfiguration.Name}\n" +
-            $"VID : {PendingConfiguration.VendorId:X4} | PID : {PendingConfiguration.ProductId:X4}\n" +
-            $"Boutons : {SelectedController.ButtonCount} | Axes : {SelectedController.AxisCount}";
+            Tf("Configuration : {0}\nVID : {1} | PID : {2}\nBoutons : {3} | Axes : {4}",
+                PendingConfiguration.Name,
+                PendingConfiguration.VendorId.ToString("X4"), PendingConfiguration.ProductId.ToString("X4"),
+                SelectedController.ButtonCount, SelectedController.AxisCount);
 
 
         ModelSelectionPanel.Visibility =
@@ -319,7 +323,7 @@ public partial class ControllerSuggestionWindow : Window
             if (SelectedController.IsWireless ||
                 !RawGameController.RawGameControllers.Contains(SelectedController))
             {
-                throw new InvalidOperationException("Manette déconnectée.");
+                throw new InvalidOperationException(Tr("Manette déconnectée."));
             }
 
 
@@ -327,10 +331,18 @@ public partial class ControllerSuggestionWindow : Window
                 new GameControllerSwitchPosition[result.SwitchPositions.Length];
 
 
-            SelectedController.GetCurrentReading(
-                result.ButtonStates,
-                switches,
-                result.AxisValues);
+            if (nintendoReader != null)
+            {
+                var reading = nintendoReader.Reading ?? throw new InvalidOperationException(Tr("Lecture Nintendo interrompue."));
+                Array.Copy(reading.ButtonStates, result.ButtonStates, result.ButtonStates.Length);
+                Array.Copy(reading.AxisValues, result.AxisValues, result.AxisValues.Length);
+                for (int i = 0; i < switches.Length; i++)
+                    switches[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+            }
+            else
+            {
+                SelectedController.GetCurrentReading(result.ButtonStates, switches, result.AxisValues);
+            }
 
 
             for (int i = 0; i < switches.Length; i++)
@@ -384,7 +396,7 @@ public partial class ControllerSuggestionWindow : Window
 
 
             AutoDetectionResultText.Text =
-                "Lecture interrompue. Rebranchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS.";
+                Tr("Lecture interrompue. Rebranchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS.");
 
             DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -414,10 +426,10 @@ public partial class ControllerSuggestionWindow : Window
 
 
         AutoDetectionResultText.Text =
-            $"Lecture en direct · {result.ButtonLabels.Length} boutons · {result.AxisValues.Length} axes\n" +
+            Tf("Lecture en direct · {0} boutons · {1} axes\n", result.ButtonLabels.Length, result.AxisValues.Length) +
             (result.HasStandardGamepad
-                ? "Commandes standard reconnues par Windows."
-                : "Certaines commandes devront être identifiées manuellement.");
+                ? Tr("Commandes standard reconnues par Windows.")
+                : Tr("Certaines commandes devront être identifiées manuellement."));
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -425,10 +437,10 @@ public partial class ControllerSuggestionWindow : Window
         DetectedButtonsItems.ItemsSource =
             result.ButtonLabels.Select((label, index) => new
             {
-                Name = $"Bouton {index}",
-                Label = label == "Non identifié" ? "Nom à identifier" : label,
+                Name = Tf("Bouton {0}", index),
+                Label = label == "Non identifié" ? Tr("Nom à identifier") : label,
                 IsPressed = result.ButtonStates[index],
-                State = result.ButtonStates[index] ? "Appuyé" : "Relâché"
+                State = result.ButtonStates[index] ? Tr("Appuyé") : Tr("Relâché")
             }).ToArray();
 
 
@@ -453,8 +465,8 @@ public partial class ControllerSuggestionWindow : Window
                 return new
                 {
                     Name = isJoystick
-                        ? $"Axe {index} · joystick"
-                        : $"Axe {index} · valeur brute",
+                        ? Tf("Axe {0} · joystick", index)
+                        : Tf("Axe {0} · valeur brute", index),
                     Minimum = isJoystick ? -1.0 : 0.0,
                     Value = value,
                     DisplayValue = value.ToString("0.000")
@@ -464,9 +476,9 @@ public partial class ControllerSuggestionWindow : Window
 
         DetectedSwitchesText.Text =
             result.SwitchPositions.Length == 0
-                ? "Aucune croix exposée séparément. Elle peut apparaître parmi les boutons."
+                ? Tr("Aucune croix exposée séparément. Elle peut apparaître parmi les boutons.")
                 : string.Join("\n", result.SwitchPositions.Select((position, index) =>
-                    $"Direction {index + 1} : {GetDirectionDisplayName(position)}"));
+                    Tf("Direction {0} : {1}", index + 1, GetDirectionDisplayName(position))));
     }
 
 
@@ -475,15 +487,15 @@ public partial class ControllerSuggestionWindow : Window
     {
         return position switch
         {
-            "Center" => "Au repos",
-            "Up" => "Haut",
-            "Down" => "Bas",
-            "Left" => "Gauche",
-            "Right" => "Droite",
-            "UpLeft" => "Haut gauche",
-            "UpRight" => "Haut droite",
-            "DownLeft" => "Bas gauche",
-            "DownRight" => "Bas droite",
+            "Center" => Tr("Au repos"),
+            "Up" => Tr("Haut"),
+            "Down" => Tr("Bas"),
+            "Left" => Tr("Gauche"),
+            "Right" => Tr("Droite"),
+            "UpLeft" => Tr("Haut gauche"),
+            "UpRight" => Tr("Haut droite"),
+            "DownLeft" => Tr("Bas gauche"),
+            "DownRight" => Tr("Bas droite"),
             _ => position
         };
     }
@@ -524,8 +536,14 @@ public partial class ControllerSuggestionWindow : Window
 
         try
         {
+            if (nintendoReader != null) await nintendoReader.StopAsync();
+            token.ThrowIfCancellationRequested();
+            nintendoReader = NintendoProControllerReader.IsSupported(SelectedController)
+                ? new NintendoProControllerReader(SelectedController) : null;
+            NintendoProControllerReader? reader = nintendoReader;
             Task<ControllerDetectionResult> detection = Task.Run(
-                () => ControllerAutoDetectionService.Detect(SelectedController), token);
+                () => reader != null ? reader.WaitForReading(token)
+                    : ControllerAutoDetectionService.Detect(SelectedController), token);
 
             await Task.WhenAll(detection, Task.Delay(450, token));
             token.ThrowIfCancellationRequested();
@@ -555,6 +573,8 @@ public partial class ControllerSuggestionWindow : Window
         }
         catch (Exception)
         {
+            if (nintendoReader != null) await nintendoReader.StopAsync();
+            nintendoReader = null;
             if (!isClosed)
             {
                 if (PendingConfiguration != null)
@@ -562,7 +582,7 @@ public partial class ControllerSuggestionWindow : Window
                     PendingConfiguration = PendingConfiguration with { Detection = null };
                 }
                 AutoDetectionResultText.Text =
-                    "Impossible de lire la manette. Vérifiez sa connexion USB, puis réessayez.";
+                    Tr("Impossible de lire la manette. Rebranchez-la en USB et fermez les autres logiciels de manette, puis réessayez.");
             }
         }
         finally
@@ -614,15 +634,15 @@ public partial class ControllerSuggestionWindow : Window
 
 
         AutoDetectionResultText.Text =
-            "La manette doit être connectée avec un câble USB pour poursuivre.";
+            Tr("La manette doit être connectée avec un câble USB pour poursuivre.");
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
 
         MessageBox.Show(
             this,
-            "Branchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS.",
-            "Connexion filaire requise",
+            Tr("Branchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS."),
+            Tr("Connexion filaire requise"),
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 
@@ -649,6 +669,7 @@ public partial class ControllerSuggestionWindow : Window
         System.EventArgs e)
     {
         isClosed = true;
+        nintendoReader?.Dispose();
         diagnosticCancellation.Cancel();
         detectionCancellation?.Cancel();
 
@@ -728,8 +749,8 @@ public partial class ControllerSuggestionWindow : Window
         StartJoystickTestButton.IsEnabled = false;
         JoystickTestActions.Visibility = Visibility.Visible;
         CaptureJoystickPositionButton.IsEnabled = false;
-        JoystickTestFeedbackText.Text = "Maintenez chaque position jusqu’à la validation. Le test comporte deux positions au repos et huit directions.";
-        JoystickInstructionText.Text = $"Étape 1 / 10 · {joystickTest.Instruction}";
+        JoystickTestFeedbackText.Text = Tr("Maintenez chaque position jusqu’à la validation. Le test comporte deux positions au repos et huit directions.");
+        JoystickInstructionText.Text = Tf("Étape 1 / 10 · {0}", joystickTest.Instruction);
         UpdateJoystickVisual(PendingConfiguration.Detection);
         liveInputTimer.Start();
     }
@@ -752,7 +773,7 @@ public partial class ControllerSuggestionWindow : Window
             {
                 PendingConfiguration = PendingConfiguration with { Joysticks = joystickTest.Result };
                 StopJoystickTest();
-                JoystickTestFeedbackText.Text = "Axes enregistrés. Bougez les deux joysticks : les points pleins suivent maintenant leurs positions. Le centre correspond à 0.";
+                JoystickTestFeedbackText.Text = Tr("Axes enregistrés. Bougez les deux joysticks : les points pleins suivent maintenant leurs positions. Le centre correspond à 0.");
                 if (PendingConfiguration.Detection != null)
                 {
                     DisplayDetectionResult(PendingConfiguration.Detection);
@@ -760,9 +781,9 @@ public partial class ControllerSuggestionWindow : Window
                 return;
             }
 
-            JoystickInstructionText.Text = $"Étape {joystickTest.Step + 1} / 10 · {joystickTest.Instruction}";
+            JoystickInstructionText.Text = Tf("Étape {0} / 10 · {1}", joystickTest.Step + 1, joystickTest.Instruction);
             UpdateJoystickVisual(PendingConfiguration.Detection);
-            JoystickTestFeedbackText.Text = "Position validée. Passez à la direction suivante.";
+            JoystickTestFeedbackText.Text = Tr("Position validée. Passez à la direction suivante.");
         }
         catch (InvalidOperationException exception)
         {
@@ -776,7 +797,7 @@ public partial class ControllerSuggestionWindow : Window
     private void CancelJoystickTestButton_Click(object sender, RoutedEventArgs e)
     {
         StopJoystickTest();
-        JoystickTestFeedbackText.Text = "Test annulé. Les positions de ce test ont été effacées.";
+        JoystickTestFeedbackText.Text = Tr("Test annulé. Les positions de ce test ont été effacées.");
         StartJoystickTestButton.IsEnabled = PendingConfiguration?.Detection != null;
     }
 
@@ -793,9 +814,10 @@ public partial class ControllerSuggestionWindow : Window
         JoystickConfiguration? configuration = PendingConfiguration?.Joysticks;
         ContinueToButtonsButton.IsEnabled = configuration != null;
         JoystickInstructionText.Text = configuration == null
-            ? "Commencez le test après la détection de la manette."
-            : $"Joystick gauche : X = axe {configuration.LeftX.AxisIndex}, Y = axe {configuration.LeftY.AxisIndex}\n" +
-              $"Joystick droit : X = axe {configuration.RightX.AxisIndex}, Y = axe {configuration.RightY.AxisIndex}";
+            ? Tr("Commencez le test après la détection de la manette.")
+            : Tf("Joystick gauche : X = axe {0}, Y = axe {1}\nJoystick droit : X = axe {2}, Y = axe {3}",
+                configuration.LeftX.AxisIndex, configuration.LeftY.AxisIndex,
+                configuration.RightX.AxisIndex, configuration.RightY.AxisIndex);
         UpdateJoystickVisual(PendingConfiguration?.Detection);
     }
 

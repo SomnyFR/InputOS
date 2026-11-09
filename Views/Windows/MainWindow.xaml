@@ -8,450 +8,625 @@
 
         Title="InputOS"
         Icon="/InputOS;component/Assets/Icons/iOSBlack.ico"
-        Width="1000"
-        Height="650"
-        MinWidth="750"
-        MinHeight="500"
+        Width="1200"
+        Height="720"
+        MinWidth="960"
+        MinHeight="560"
         WindowStartupLocation="CenterScreen"
 
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppForegroundBrush}">
 
+    <Window.Resources>
+
+        <!-- =====================================================================
+             STYLE
+             ===================================================================== -->
+
+        <Style x:Key="NavButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource {x:Type Button}}">
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+
+            <Setter Property="Padding"
+                    Value="14,11"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,0,4"/>
+
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Left"/>
+
+        </Style>
+
+
+        <Style x:Key="NavGlyphStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="FontFamily"
+                    Value="Segoe MDL2 Assets"/>
+
+            <Setter Property="FontSize"
+                    Value="16"/>
+
+            <Setter Property="Width"
+                    Value="28"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource AppAccentBrush}"/>
+
+            <Setter Property="VerticalAlignment"
+                    Value="Center"/>
+
+        </Style>
+
+
+        <Style x:Key="CardStyle"
+               TargetType="Border">
+
+            <Setter Property="Background"
+                    Value="{DynamicResource AppCardBrush}"/>
+
+            <Setter Property="CornerRadius"
+                    Value="14"/>
+
+            <Setter Property="Padding"
+                    Value="22"/>
+
+        </Style>
+
+
+        <Style x:Key="SectionTitleStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="FontSize"
+                    Value="12"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource AppSecondaryTextBrush}"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,0,16"/>
+
+        </Style>
+
+
+        <Style x:Key="InformationLabelStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="Margin"
+                    Value="0,0,12,12"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource AppSecondaryTextBrush}"/>
+
+        </Style>
+
+
+        <Style x:Key="InformationValueStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="Margin"
+                    Value="0,0,0,12"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="TextWrapping"
+                    Value="Wrap"/>
+
+        </Style>
+
+
+        <!-- Chaque manette est une carte verticale : nom en haut, image dessous. -->
+        <Style TargetType="TreeViewItem">
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource AppForegroundBrush}"/>
+
+            <Setter Property="Background"
+                    Value="Transparent"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,16,16"/>
+
+            <Setter Property="ItemsPanel">
+
+                <Setter.Value>
+
+                    <ItemsPanelTemplate>
+
+                        <WrapPanel/>
+
+                    </ItemsPanelTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+            <Setter Property="Template">
+
+                <Setter.Value>
+
+                    <ControlTemplate TargetType="TreeViewItem">
+
+                        <StackPanel>
+
+                            <Border x:Name="CardBorder"
+                                    Width="210"
+                                    Height="240"
+                                    Background="{DynamicResource AppCardBrush}"
+                                    CornerRadius="14"
+                                    Padding="20,18"
+                                    BorderThickness="2"
+                                    BorderBrush="Transparent">
+
+                                <Grid>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Nom sur deux lignes au plus, puis ellipse ; le nom complet est dans l'info-bulle. -->
+                                    <TextBlock Text="{TemplateBinding Header}"
+                                               ToolTip="{TemplateBinding Header}"
+                                               Foreground="White"
+                                               FontWeight="Bold"
+                                               FontSize="18"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxHeight="50"/>
+
+                                    <Image x:Name="CardImage"
+                                           Grid.Row="1"
+                                           Source="{Binding (local:MainWindow.CardImage), RelativeSource={RelativeSource TemplatedParent}}"
+                                           Stretch="Uniform"
+                                           VerticalAlignment="Center"
+                                           Margin="0,10,0,0"/>
+
+                                    <TextBlock x:Name="GenericControllerGlyph"
+                                               Grid.Row="1"
+                                               Visibility="Collapsed"
+                                               Text="&#xE7FC;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="80"
+                                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Margin="0,10,0,0"/>
+
+                                </Grid>
+
+                            </Border>
+
+                            <ItemsPresenter x:Name="ItemsHost"/>
+
+                        </StackPanel>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger SourceName="CardBorder"
+                                     Property="IsMouseOver"
+                                     Value="True">
+
+                                <Setter TargetName="CardBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource AppCardHoverBrush}"/>
+
+                            </Trigger>
+
+                            <Trigger Property="IsSelected"
+                                     Value="True">
+
+                                <Setter TargetName="CardBorder"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource AppAccentBrush}"/>
+
+                            </Trigger>
+
+                            <!-- Pas d'illustration pour ce modèle : icône générique. -->
+                            <Trigger Property="local:MainWindow.CardImage"
+                                     Value="{x:Null}">
+
+                                <Setter TargetName="GenericControllerGlyph"
+                                        Property="Visibility"
+                                        Value="Visible"/>
+
+                            </Trigger>
+
+                            <!-- Sans manette associée (groupe « Manettes », message vide) : simple texte, pas de carte. -->
+                            <Trigger Property="Tag"
+                                     Value="{x:Null}">
+
+                                <Setter TargetName="CardBorder"
+                                        Property="Width"
+                                        Value="NaN"/>
+
+                                <Setter TargetName="CardBorder"
+                                        Property="Height"
+                                        Value="NaN"/>
+
+                                <Setter TargetName="CardBorder"
+                                        Property="Background"
+                                        Value="Transparent"/>
+
+                                <Setter TargetName="CardBorder"
+                                        Property="Padding"
+                                        Value="0,0,0,8"/>
+
+                                <!-- Titre non cliquable : ni sélection, ni contour. -->
+                                <Setter TargetName="CardBorder"
+                                        Property="IsHitTestVisible"
+                                        Value="False"/>
+
+                                <Setter Property="Focusable"
+                                        Value="False"/>
+
+                                <Setter TargetName="GenericControllerGlyph"
+                                        Property="Visibility"
+                                        Value="Collapsed"/>
+
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+
+                </Setter.Value>
+
+            </Setter>
+
+        </Style>
+
+    </Window.Resources>
+
+
     <Grid>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
 
         <!-- =========================================================================
-             FONCTIONNALITÉ : BARRE D'OUTILS
+             FONCTIONNALITÉ : BARRE LATÉRALE (ACTIONS)
              ========================================================================= -->
 
-        <Grid Grid.Row="0"
-              Margin="10">
+        <Border Grid.Row="0"
+                Grid.Column="0"
+                Background="#101216"
+                Padding="18,26,18,18">
 
-            <!-- =====================================================================
-                 STYLE
-                 ===================================================================== -->
+            <StackPanel>
 
-            <Grid.Resources>
+                <TextBlock Text="InputOS"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="White"/>
 
-                <Style x:Key="ToolbarButtonStyle"
-                       TargetType="Button">
-
-                    <Setter Property="Padding"
-                            Value="10,5"/>
-
-                    <Setter Property="Margin"
-                            Value="0,0,5,0"/>
-
-                    <Setter Property="MinWidth"
-                            Value="90"/>
-
-                    <Setter Property="Background"
-                            Value="{DynamicResource AppPanelBrush}"/>
-
-                    <Setter Property="Foreground"
-                            Value="{DynamicResource AppForegroundBrush}"/>
-
-                    <Setter Property="BorderBrush"
-                            Value="{DynamicResource AppBorderBrush}"/>
-
-                    <Setter Property="BorderThickness"
-                            Value="1"/>
-
-                </Style>
-
-            </Grid.Resources>
+                <TextBlock Text="Détection et test de manettes"
+                           Margin="0,2,0,32"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
 
 
-            <!-- =====================================================================
-                 INTERFACE
-                 ===================================================================== -->
+                <Button Style="{StaticResource NavButtonStyle}"
+                        Click="RefreshButton_Click">
 
-            <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal">
 
-                <Button Content="Actualiser"
-                        Style="{StaticResource ToolbarButtonStyle}"
-                        Click="RefreshButton_Click"/>
+                        <TextBlock Text="&#xE72C;"
+                                   Style="{StaticResource NavGlyphStyle}"/>
+
+                        <TextBlock Text="Actualiser"/>
+
+                    </StackPanel>
+
+                </Button>
+
 
                 <Button x:Name="TesterButton"
-                        Content="Tester"
                         IsEnabled="False"
-                        Style="{StaticResource ToolbarButtonStyle}"
-                        Click="TesterButton_Click"/>
+                        Style="{StaticResource NavButtonStyle}"
+                        Click="TesterButton_Click">
 
-                <Button Content="Paramètres"
-                        Style="{StaticResource ToolbarButtonStyle}"
-                        Click="SettingsButton_Click"/>
+                    <StackPanel Orientation="Horizontal">
+
+                        <TextBlock Text="&#xE7FC;"
+                                   Style="{StaticResource NavGlyphStyle}"/>
+
+                        <TextBlock Text="Tester"/>
+
+                    </StackPanel>
+
+                </Button>
+
+
+                <Button Style="{StaticResource NavButtonStyle}"
+                        Click="SettingsButton_Click">
+
+                    <StackPanel Orientation="Horizontal">
+
+                        <TextBlock Text="&#xE713;"
+                                   Style="{StaticResource NavGlyphStyle}"/>
+
+                        <TextBlock Text="Paramètres"/>
+
+                    </StackPanel>
+
+                </Button>
 
             </StackPanel>
 
-        </Grid>
+        </Border>
 
         <!-- =========================================================================
-             FIN FONCTIONNALITÉ : BARRE D'OUTILS
+             FIN FONCTIONNALITÉ : BARRE LATÉRALE (ACTIONS)
              ========================================================================= -->
-
 
 
         <!-- =========================================================================
              FONCTIONNALITÉ : GESTION DES PÉRIPHÉRIQUES
              ========================================================================= -->
 
-        <Grid Grid.Row="1"
-              Margin="10,0,10,10">
-
-            <!-- =====================================================================
-                 STYLE
-                 ===================================================================== -->
-
-            <Grid.Resources>
-
-                <Style x:Key="InformationLabelStyle"
-                       TargetType="TextBlock">
-
-                    <Setter Property="Margin"
-                            Value="0,0,10,8"/>
-
-                    <Setter Property="FontWeight"
-                            Value="SemiBold"/>
-
-                </Style>
-
-
-                <Style x:Key="InformationValueStyle"
-                       TargetType="TextBlock">
-
-                    <Setter Property="Margin"
-                            Value="0,0,0,8"/>
-
-                    <Setter Property="TextWrapping"
-                            Value="Wrap"/>
-
-                </Style>
-
-
-                <Style TargetType="TreeViewItem">
-
-                    <Setter Property="Foreground"
-                            Value="{DynamicResource AppForegroundBrush}"/>
-
-                    <Setter Property="Background"
-                            Value="Transparent"/>
-
-                </Style>
-
-            </Grid.Resources>
-
-
-            <!-- =====================================================================
-                 INTERFACE
-                 ===================================================================== -->
+        <Grid Grid.Row="0"
+              Grid.Column="1"
+              Margin="32,28,32,20">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="320"/>
-                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="340"/>
             </Grid.ColumnDefinitions>
 
 
+            <!-- =====================================================================
+                 LISTE DES MANETTES
+                 ===================================================================== -->
 
-            <!-- =========================================================================
-                 FONCTIONNALITÉ : LISTE DES MANETTES
-                 ========================================================================= -->
+            <Grid Grid.Column="0">
 
-            <Border Grid.Column="0"
-                    BorderBrush="{DynamicResource AppBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <Grid>
+                <StackPanel Margin="0,0,0,22">
 
-                    <TextBlock Text="Périphériques"
-                               Foreground="{DynamicResource AppForegroundBrush}"
-                               Background="{DynamicResource AppBackgroundBrush}"
-                               Margin="8,-17,0,0"
-                               Padding="4,0"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Top"/>
+                    <TextBlock Text="Mes manettes"
+                               FontSize="30"
+                               FontWeight="Bold"
+                               Foreground="White"/>
 
+                    <TextBlock Text="Sélectionnez une manette pour afficher ses informations."
+                               Margin="0,4,0,0"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}"/>
 
-                    <TreeView x:Name="DeviceTreeView"
-                              Margin="8"
-                              Background="{DynamicResource AppPanelBrush}"
-                              Foreground="{DynamicResource AppForegroundBrush}"
-                              BorderBrush="{DynamicResource AppBorderBrush}"
-                              BorderThickness="1"
-                              SelectedItemChanged="DeviceTreeView_SelectedItemChanged"/>
+                    <ProgressBar x:Name="RefreshProgressBar"
+                                 IsIndeterminate="True"
+                                 Visibility="Collapsed"
+                                 Height="3"
+                                 Margin="0,14,0,0"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 Foreground="{DynamicResource AppAccentBrush}"/>
 
-                </Grid>
-
-            </Border>
-
-            <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : LISTE DES MANETTES
-                 ========================================================================= -->
+                </StackPanel>
 
 
+                <TreeView x:Name="DeviceTreeView"
+                          Grid.Row="1"
+                          Background="Transparent"
+                          Foreground="{DynamicResource AppForegroundBrush}"
+                          BorderThickness="0"
+                          SelectedItemChanged="DeviceTreeView_SelectedItemChanged"/>
 
-            <!-- =========================================================================
-                 FONCTIONNALITÉ : SÉPARATEUR
-                 ========================================================================= -->
-
-            <GridSplitter Grid.Column="1"
-                          Width="5"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"
-                          Background="Transparent">
-
-                <GridSplitter.Template>
-
-                    <ControlTemplate TargetType="GridSplitter">
-
-                        <Border Width="1"
-                                HorizontalAlignment="Center"
-                                Background="{DynamicResource AppBorderBrush}"/>
-
-                    </ControlTemplate>
-
-                </GridSplitter.Template>
-
-            </GridSplitter>
-
-            <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : SÉPARATEUR
-                 ========================================================================= -->
+            </Grid>
 
 
-
-            <!-- =========================================================================
-                 FONCTIONNALITÉ : INFORMATIONS MANETTE
-                 ========================================================================= -->
+            <!-- =====================================================================
+                 INFORMATIONS MANETTE
+                 ===================================================================== -->
 
             <Border Grid.Column="2"
-                    BorderBrush="{DynamicResource AppBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="2"
-                    Padding="0,8,0,0">
+                    Style="{StaticResource CardStyle}">
 
                 <Grid>
 
-                    <TextBlock Text="Informations"
-                               Foreground="{DynamicResource AppForegroundBrush}"
-                               Background="{DynamicResource AppBackgroundBrush}"
-                               Margin="8,-17,0,0"
-                               Padding="4,0"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Top"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="INFORMATIONS"
+                               Style="{StaticResource SectionTitleStyle}"/>
 
 
-                    <Grid Margin="15">
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                    <!-- Illustration du modèle (DualShock 4 et manettes Xbox) ; masquée pour les autres. -->
+                    <Image x:Name="DeviceImage"
+                           Grid.Row="1"
+                           Visibility="Collapsed"
+                           Height="130"
+                           Stretch="Uniform"
+                           Margin="0,0,0,20"/>
 
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="160"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                    <!-- FONCTIONNALITÉ : AVERTISSEMENT DE COMPATIBILITÉ -->
+
+                    <Border x:Name="ControllerCompatibilityWarning"
+                            Grid.Row="2"
+                            Visibility="Collapsed"
+                            Background="#2A2D35"
+                            BorderBrush="{DynamicResource AppAccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="14"
+                            Margin="0,0,0,18">
+
+                        <StackPanel>
+
+                            <TextBlock x:Name="ControllerCompatibilityWarningText"
+                                       Text="Manette non compatible. Aidez-nous à l’ajouter à InputOS."
+                                       Foreground="{DynamicResource AppForegroundBrush}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+
+                            <Button Content="Suggérer la manette"
+                                    Margin="0,12,0,0"
+                                    Click="SuggestControllerButton_Click"/>
+
+                        </StackPanel>
+
+                    </Border>
 
 
-                        <!-- =====================================================================
-                             FONCTIONNALITÉ : AVERTISSEMENT DE COMPATIBILITÉ
-                             ===================================================================== -->
+                    <ScrollViewer Grid.Row="3"
+                                  VerticalScrollBarVisibility="Auto">
 
-                        <Border x:Name="ControllerCompatibilityWarning"
-                                Grid.Row="0"
-                                Grid.ColumnSpan="2"
-                                Visibility="Collapsed"
-                                Background="{DynamicResource AppPanelBrush}"
-                                BorderBrush="{DynamicResource AppBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="2"
-                                Padding="10"
-                                Margin="0,0,0,15">
+                        <Grid>
 
-                            <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-
-                                <TextBlock x:Name="ControllerCompatibilityWarningText" Grid.Column="0"
-                                           Text="Manette non compatible. Aidez-nous à l’ajouter à InputOS."
-                                           Foreground="{DynamicResource AppForegroundBrush}"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           TextWrapping="Wrap"/>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
 
-                                <Button Grid.Column="1"
-                                        Content="Suggérer la manette"
-                                        Margin="10,0,0,0"
-                                        Padding="10,5"
-                                        VerticalAlignment="Center"
-                                        Background="{DynamicResource AppPanelBrush}"
-                                        Foreground="{DynamicResource AppForegroundBrush}"
-                                        BorderBrush="{DynamicResource AppBorderBrush}"
-                                        BorderThickness="1"
-                                        Click="SuggestControllerButton_Click"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="Nom"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                            </Grid>
-
-                        </Border>
-
-                        <!-- =====================================================================
-                             FIN FONCTIONNALITÉ : AVERTISSEMENT DE COMPATIBILITÉ
-                             ===================================================================== -->
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="0"
-                                   Text="Nom :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
-
-                        <TextBlock x:Name="DeviceNameText"
-                                   Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceNameText"
+                                       Grid.Row="0" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="2"
-                                   Grid.Column="0"
-                                   Text="Type :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="Type"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceTypeText"
-                                   Grid.Row="2"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceTypeText"
+                                       Grid.Row="1" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="3"
-                                   Grid.Column="0"
-                                   Text="Connexion :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="Connexion"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceConnectionText"
-                                   Grid.Row="3"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceConnectionText"
+                                       Grid.Row="2" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="4"
-                                   Grid.Column="0"
-                                   Text="VID :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       Text="VID"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceVidText"
-                                   Grid.Row="4"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceVidText"
+                                       Grid.Row="3" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="5"
-                                   Grid.Column="0"
-                                   Text="PID :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0"
+                                       Text="PID"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DevicePidText"
-                                   Grid.Row="5"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DevicePidText"
+                                       Grid.Row="4" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="6"
-                                   Grid.Column="0"
-                                   Text="Boutons :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0"
+                                       Text="Boutons"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceButtonsText"
-                                   Grid.Row="6"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceButtonsText"
+                                       Grid.Row="5" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="7"
-                                   Grid.Column="0"
-                                   Text="Axes :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="6" Grid.Column="0"
+                                       Text="Axes"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceAxesText"
-                                   Grid.Row="7"
-                                   Grid.Column="1"
-                                   Text="-"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceAxesText"
+                                       Grid.Row="6" Grid.Column="1"
+                                       Text="-"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="8"
-                                   Grid.Column="0"
-                                   Text="Firmware :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="7" Grid.Column="0"
+                                       Text="Firmware"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceFirmwareText"
-                                   Grid.Row="8"
-                                   Grid.Column="1"
-                                   Text="Non disponible"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceFirmwareText"
+                                       Grid.Row="7" Grid.Column="1"
+                                       Text="Non disponible"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="9"
-                                   Grid.Column="0"
-                                   Text="Batterie :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="8" Grid.Column="0"
+                                       Text="Batterie"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceBatteryText"
-                                   Grid.Row="9"
-                                   Grid.Column="1"
-                                   Text="Non disponible"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceBatteryText"
+                                       Grid.Row="8" Grid.Column="1"
+                                       Text="Non disponible"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
 
-                        <TextBlock Grid.Row="10"
-                                   Grid.Column="0"
-                                   Text="État :"
-                                   Style="{StaticResource InformationLabelStyle}"/>
+                            <TextBlock Grid.Row="9" Grid.Column="0"
+                                       Text="État"
+                                       Style="{StaticResource InformationLabelStyle}"/>
 
-                        <TextBlock x:Name="DeviceStatusText"
-                                   Grid.Row="10"
-                                   Grid.Column="1"
-                                   Text="Aucun périphérique sélectionné"
-                                   Style="{StaticResource InformationValueStyle}"/>
+                            <TextBlock x:Name="DeviceStatusText"
+                                       Grid.Row="9" Grid.Column="1"
+                                       Text="Aucun périphérique sélectionné"
+                                       Style="{StaticResource InformationValueStyle}"/>
 
-                    </Grid>
+                        </Grid>
+
+                    </ScrollViewer>
 
                 </Grid>
 
             </Border>
-
-            <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : INFORMATIONS MANETTE
-                 ========================================================================= -->
 
         </Grid>
 
@@ -460,27 +635,16 @@
              ========================================================================= -->
 
 
-
         <!-- =========================================================================
              FONCTIONNALITÉ : BARRE D'ÉTAT
              ========================================================================= -->
 
-        <StatusBar Grid.Row="2"
-                   Background="{DynamicResource AppPanelBrush}"
-                   Foreground="{DynamicResource AppForegroundBrush}"
-                   BorderBrush="{DynamicResource AppBorderBrush}"
-                   BorderThickness="1,1,0,0">
-
-            <!-- =====================================================================
-                 STYLE
-                 ===================================================================== -->
-
-            <!-- Style Windows par défaut -->
-
-
-            <!-- =====================================================================
-                 INTERFACE
-                 ===================================================================== -->
+        <StatusBar Grid.Row="1"
+                   Grid.ColumnSpan="2"
+                   Background="#101216"
+                   Foreground="{DynamicResource AppSecondaryTextBrush}"
+                   BorderThickness="0"
+                   Padding="12,4">
 
             <StatusBarItem>
 

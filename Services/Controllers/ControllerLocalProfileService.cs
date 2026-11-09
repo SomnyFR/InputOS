@@ -12,11 +12,23 @@ public static class ControllerLocalProfileService
     // ============================================================================
     public static ControllerLocalProfile? Load(RawGameController controller)
     {
-        if (controller.IsWireless || ControllerCompatibilityService.HasValidatedProfile(controller)) return null;
+        if (controller.IsWireless) return null;
         try
         {
             string path = Path.Combine(ControllerProfileExportService.GetProfilesDirectory(),
                 $"InputOS-{controller.HardwareVendorId:X4}-{controller.HardwareProductId:X4}.json");
+            if (ControllerCompatibilityService.HasValidatedProfile(controller))
+            {
+                // Les profils locaux sont USB uniquement : un profil officiel qui s'applique à cette manette USB
+                // (VID/PID, transport et nombres d'entrées) le remplace. On archive au lieu de supprimer.
+                if (File.Exists(path))
+                {
+                    string archive = Path.Combine(Path.GetDirectoryName(path)!, "archive");
+                    Directory.CreateDirectory(archive);
+                    File.Move(path, Path.Combine(archive, Path.GetFileName(path)), true);
+                }
+                return null;
+            }
             if (!File.Exists(path) || new FileInfo(path).Length > 65536) return null;
             var profile = JsonSerializer.Deserialize<ControllerLocalProfile>(File.ReadAllText(path));
             if (profile == null || !IsValid(profile, controller.HardwareVendorId, controller.HardwareProductId,
@@ -28,6 +40,9 @@ public static class ControllerLocalProfileService
 
     public static bool IsValid(ControllerLocalProfile p, ushort vendor, ushort product, int buttons, int axes, int switches)
     {
+        // Un profil issu des anciennes entrées Windows ne peut pas être utilisé avec le décodage Nintendo.
+        if (p.InputReadingFormat != (vendor == 0x057E && product == 0x2009
+            ? NintendoProControllerReader.ReadingFormat : "WindowsRaw")) return false;
         if (p.SchemaVersion != 1 || p.ProfileType != "UserConfiguration" || p.ValidatedByInputOS ||
             string.IsNullOrWhiteSpace(p.Model) || p.Model.Length > 100 || p.Connection != "USB" ||
             p.VendorId != vendor || p.ProductId != product || p.ButtonCount != buttons ||

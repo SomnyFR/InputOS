@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="Settings.Title">InputOS - Settings</sys:String>
+    <sys:String x:Key="Settings.Heading">Settings</sys:String>
+    <sys:String x:Key="Settings.Language.Section">LANGUAGE</sys:String>
+    <sys:String x:Key="Settings.Language.Label">Interface language</sys:String>
+    <sys:String x:Key="Settings.Language.Note">The new language is applied after InputOS restarts. French is the reference language.</sys:String>
+    <sys:String x:Key="Settings.Language.RestartTitle">Language changed</sys:String>
+    <sys:String x:Key="Settings.Language.RestartMessage">Restart InputOS now to apply the language?&#10;&#10;Yes: restart now.&#10;No: apply later (next launch).</sys:String>
+    <sys:String x:Key="Settings.Window.Section">WINDOW</sys:String>
+    <sys:String x:Key="Settings.Window.CloseToTray">Minimize to background</sys:String>
+    <sys:String x:Key="Settings.Updates.Section">UPDATES</sys:String>
+    <sys:String x:Key="Settings.Updates.Check">Check for updates</sys:String>
+    <sys:String x:Key="Settings.Updates.Restart">Restart to update</sys:String>
+    <sys:String x:Key="Settings.Updates.Note">Local profiles and settings are kept. Close any configuration in progress before restarting.</sys:String>
+    <sys:String x:Key="Settings.Cache.Section">CACHE</sys:String>
+    <sys:String x:Key="Settings.Cache.Profiles">Saved profiles</sys:String>
+    <sys:String x:Key="Settings.Cache.Logs">Debug logs</sys:String>
+    <sys:String x:Key="Settings.Cache.NoLogs">The application does not write any log.</sys:String>
+    <sys:String x:Key="Settings.Cache.Delete">Delete</sys:String>
+    <sys:String x:Key="Settings.Cache.Misc">Miscellaneous settings</sys:String>
+</ResourceDictionary>

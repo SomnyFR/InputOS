@@ -1,4 +1,5 @@
-﻿using Windows.Gaming.Input;
+﻿using static InputOS.Services.LocalizationService;
+using Windows.Gaming.Input;
 
 namespace InputOS.Services;
 
@@ -30,7 +31,8 @@ public static class ControllerCompatibilityService
             [(SonyVendorId, 0x09CC)] = "DualShock 4",
             [(SonyVendorId, 0x0CE6)] = "DualSense",
             [(SonyVendorId, 0x0DF2)] = "DualSense Edge",
-            [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2",
+            // TEST « Suggérer » : Xbox Elite Series 2 désactivée temporairement, à rétablir ensuite.
+            // [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2",
             [(MicrosoftVendorId, 0x0B12)] = "Xbox Series S/X"
         };
 
@@ -85,11 +87,8 @@ public static class ControllerCompatibilityService
                 (controller.HardwareVendorId, controller.HardwareProductId),
                 out string? profileName))
         {
-            // Conserver le nom Windows des manettes Xbox lorsqu'il est disponible.
-            return controller.HardwareVendorId == MicrosoftVendorId &&
-                   !string.IsNullOrWhiteSpace(controller.DisplayName)
-                ? controller.DisplayName
-                : profileName;
+            // Le nom Windows est générique en Bluetooth (« Contrôleur de jeu HID »).
+            return profileName;
         }
 
 
@@ -102,13 +101,13 @@ public static class ControllerCompatibilityService
         return controller.HardwareVendorId switch
         {
             SonyVendorId =>
-                "Manette PlayStation",
+                Tr("Manette PlayStation"),
 
             MicrosoftVendorId =>
-                "Manette Xbox",
+                Tr("Manette Xbox"),
 
             _ =>
-                "Manette"
+                Tr("Manette")
         };
     }
 
@@ -125,7 +124,7 @@ public static class ControllerCompatibilityService
                 "Xbox",
 
             _ =>
-                "Inconnu"
+                Tr("Inconnu")
         };
     }
 

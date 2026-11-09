@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using InputOS.Models;
 
 namespace InputOS.Services;
@@ -25,17 +26,17 @@ public sealed class JoystickConfigurationService
     public JoystickConfiguration? Result { get; private set; }
 
     public string Instruction => IsComplete
-        ? "Les deux joysticks sont identifiés. Bougez-les pour vérifier les valeurs."
+        ? Tr("Les deux joysticks sont identifiés. Bougez-les pour vérifier les valeurs.")
         : (Step % 5) switch
         {
-            0 => $"Relâchez les deux joysticks, puis validez leur position au repos ({StickName}).",
-            1 => $"Maintenez le joystick {StickName} complètement à DROITE (X), puis validez.",
-            2 => $"Maintenez le joystick {StickName} complètement à GAUCHE (X), puis validez.",
-            3 => $"Maintenez le joystick {StickName} complètement en HAUT (Y), puis validez.",
-            _ => $"Maintenez le joystick {StickName} complètement en BAS (Y), puis validez."
+            0 => Tf("Relâchez les deux joysticks, puis validez leur position au repos ({0}).", Tr(StickName)),
+            1 => Tf("Maintenez le joystick {0} complètement à DROITE (X), puis validez.", Tr(StickName)),
+            2 => Tf("Maintenez le joystick {0} complètement à GAUCHE (X), puis validez.", Tr(StickName)),
+            3 => Tf("Maintenez le joystick {0} complètement en HAUT (Y), puis validez.", Tr(StickName)),
+            _ => Tf("Maintenez le joystick {0} complètement en BAS (Y), puis validez.", Tr(StickName))
         };
 
-    private string StickName => Step < 5 ? "gauche" : "droit";
+    private string StickName => Step < 5 ? Tr("gauche") : Tr("droit");
 
 
     // ---------------------------------------------------------------------------
@@ -51,14 +52,14 @@ public sealed class JoystickConfigurationService
 
         if (samples.Count < 5)
         {
-            throw new InvalidOperationException("Maintenez la position un court instant avant de valider.");
+            throw new InvalidOperationException(Tr("Maintenez la position un court instant avant de valider."));
         }
 
         int count = samples[0].Length;
         if (count < 4 || samples.Any(sample => sample.Length != count ||
             sample.Any(value => !double.IsFinite(value))))
         {
-            throw new InvalidOperationException("Les données des axes ne permettent pas ce test.");
+            throw new InvalidOperationException(Tr("Les données des axes ne permettent pas ce test."));
         }
 
         double[] current = Enumerable.Range(0, count)
@@ -68,7 +69,7 @@ public sealed class JoystickConfigurationService
         {
             if (samples.Max(sample => sample[i]) - samples.Min(sample => sample[i]) > 0.06)
             {
-                throw new InvalidOperationException("La position bouge encore. Maintenez le joystick immobile, puis réessayez.");
+                throw new InvalidOperationException(Tr("La position bouge encore. Maintenez le joystick immobile, puis réessayez."));
             }
         }
 
@@ -81,7 +82,7 @@ public sealed class JoystickConfigurationService
 
         if (center == null || center.Length != count)
         {
-            throw new InvalidOperationException("Recommencez le test : le nombre d’axes a changé.");
+            throw new InvalidOperationException(Tr("Recommencez le test : le nombre d’axes a changé."));
         }
 
         int[] candidates = Enumerable.Range(0, count)
@@ -92,17 +93,17 @@ public sealed class JoystickConfigurationService
 
         if (Math.Abs(movement) < 0.25)
         {
-            throw new InvalidOperationException("Mouvement trop faible. Poussez le joystick complètement dans la direction demandée.");
+            throw new InvalidOperationException(Tr("Mouvement trop faible. Poussez le joystick complètement dans la direction demandée."));
         }
 
         if (secondMovement > Math.Abs(movement) * 0.55)
         {
-            throw new InvalidOperationException("Plusieurs axes bougent. Évitez les diagonales et ne touchez pas aux autres commandes.");
+            throw new InvalidOperationException(Tr("Plusieurs axes bougent. Évitez les diagonales et ne touchez pas aux autres commandes."));
         }
 
         if (axes.Any(axis => axis.AxisIndex == candidate))
         {
-            throw new InvalidOperationException("Cet axe appartient déjà à une autre direction. Utilisez le joystick et la direction demandés.");
+            throw new InvalidOperationException(Tr("Cet axe appartient déjà à une autre direction. Utilisez le joystick et la direction demandés."));
         }
 
         if (Step % 5 is 1 or 3)
@@ -115,7 +116,7 @@ public sealed class JoystickConfigurationService
             if (candidate != positiveAxis ||
                 movement * (positiveEnd - center[candidate]) >= 0)
             {
-                throw new InvalidOperationException("La direction opposée ne correspond pas au même axe. Suivez la direction indiquée.");
+                throw new InvalidOperationException(Tr("La direction opposée ne correspond pas au même axe. Suivez la direction indiquée."));
             }
 
             axes.Add(new JoystickAxisConfiguration(

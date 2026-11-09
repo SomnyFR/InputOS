@@ -11,25 +11,122 @@
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource AppForegroundBrush}">
 
-    <Grid Margin="24">
+    <Grid Margin="32,28,32,24">
 
         <Grid.Resources>
             <Style x:Key="CardStyle" TargetType="Border">
-                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Padding" Value="22"/>
                 <Setter Property="Margin" Value="0,0,0,16"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="14"/>
+                <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
             </Style>
-            <Style x:Key="NavigationButtonStyle" TargetType="Button">
-                <Setter Property="MinWidth" Value="90"/>
-                <Setter Property="Padding" Value="10,5"/>
+            <Style x:Key="NavigationButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="MinWidth" Value="100"/>
                 <Setter Property="Margin" Value="10,0,0,0"/>
-                <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+            </Style>
+
+            <!-- Bouton principal : fond cyan, texte sombre, survol plus clair. -->
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+                <Setter Property="Foreground" Value="#101216"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}"
+                                    CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.85"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.7"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.4"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="TextBox">
+                <Setter Property="Background" Value="{DynamicResource AppCardHoverBrush}"/>
                 <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CaretBrush" Value="{DynamicResource AppForegroundBrush}"/>
+                <Setter Property="Padding" Value="10,8"/>
+            </Style>
+
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBoxItem">
+                            <Border x:Name="ItemBorder" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AppCardHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#0E4A5C"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="ComboBox">
+                <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton x:Name="DropDownToggle"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                              ClickMode="Press" Focusable="False">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="{DynamicResource AppCardHoverBrush}"
+                                                    BorderBrush="{DynamicResource AppBorderBrush}"
+                                                    BorderThickness="1" CornerRadius="8">
+                                                <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                           Margin="0,0,12,0"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  Margin="12,9,34,9" VerticalAlignment="Center"
+                                                  IsHitTestVisible="False"/>
+                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                                       AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                    <Border Background="{DynamicResource AppCardBrush}"
+                                            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
+                                            CornerRadius="8" Margin="0,4,0,0"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                            MaxHeight="300">
+                                        <ScrollViewer>
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </Grid.Resources>
 
@@ -53,7 +150,7 @@
             <TextBlock Text="ÉTAPE 1 / 5 · VOTRE MANETTE"
                        Foreground="{DynamicResource AppAccentBrush}" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
-            <TextBlock Text="Donnons un nom à votre manette" FontSize="24"
+            <TextBlock Text="Donnons un nom à votre manette" FontSize="28"
                        FontWeight="SemiBold"
                        TextWrapping="Wrap"
                        Margin="0,0,0,8"/>
@@ -109,7 +206,7 @@
             <TextBlock Text="ÉTAPE 2 / 5 · PREMIÈRE DÉTECTION"
                        Foreground="{DynamicResource AppAccentBrush}" FontWeight="SemiBold" Margin="0,0,0,12"/>
             <TextBlock Text="Découvrons votre manette"
-                       FontWeight="SemiBold" FontSize="24" Margin="0,0,0,8"/>
+                       FontWeight="SemiBold" FontSize="28" Margin="0,0,0,8"/>
             <TextBlock Text="Lancez la détection, puis observez les commandes en direct."
                        TextWrapping="Wrap" Margin="0,0,0,20"/>
 
@@ -127,9 +224,9 @@
                     <TextBlock Text="Posez la manette au repos, avec son câble USB branché."
                                TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <Button x:Name="AutoDetectButton" Content="Détecter automatiquement"
-                            HorizontalAlignment="Left" Padding="16,10"
-                            Background="{DynamicResource AppAccentBrush}" Foreground="White"
-                            BorderThickness="0" Click="AutoDetectButton_Click"/>
+                            HorizontalAlignment="Left" Padding="18,11"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Click="AutoDetectButton_Click"/>
                     <TextBlock x:Name="AutoDetectionResultText"
                                Text="Prêt à détecter. Aucune manipulation nécessaire."
                                TextWrapping="Wrap" Margin="0,12,0,0"
@@ -143,7 +240,7 @@
              FONCTIONNALITÉ : CHARGEMENT DE LA DÉTECTION
              ========================================================================= -->
         <StackPanel x:Name="DetectionLoadingPanel" Visibility="Collapsed" Margin="0,40,0,0">
-            <TextBlock Text="Détection en cours…" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,12"/>
+            <TextBlock Text="Détection en cours…" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,12"/>
             <TextBlock Text="Lecture des informations de votre manette. Gardez le câble USB branché."
                        TextWrapping="Wrap" Margin="0,0,0,20"/>
             <ProgressBar Height="8" IsIndeterminate="True"
@@ -156,7 +253,7 @@
         <StackPanel x:Name="DetectionResultsPanel" Visibility="Collapsed">
             <TextBlock Text="ÉTAPE 3 / 5 · COMMANDES DÉTECTÉES"
                        Foreground="{DynamicResource AppAccentBrush}" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <TextBlock Text="Votre manette est détectée" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Votre manette est détectée" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <TextBlock x:Name="DetectionStatusText" TextWrapping="Wrap" Margin="0,0,0,20"/>
 
             <Border Style="{StaticResource CardStyle}">
@@ -165,9 +262,8 @@
                     <TextBlock Text="Ouvrez le test visuel pour identifier les axes et leur sens."
                                TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <Button x:Name="StartJoystickTestButton" Content="Configurer les joysticks"
-                            IsEnabled="False" HorizontalAlignment="Left" Padding="12,8"
-                            Background="{DynamicResource AppPanelBrush}" Foreground="{DynamicResource AppForegroundBrush}"
-                            BorderBrush="{DynamicResource AppBorderBrush}" Click="StartJoystickTestButton_Click"/>
+                            IsEnabled="False" HorizontalAlignment="Left" Padding="16,10"
+                            Click="StartJoystickTestButton_Click"/>
                 </StackPanel>
             </Border>
 
@@ -194,7 +290,8 @@
                                                 <Setter Property="BorderThickness" Value="1"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsPressed}" Value="True">
-                                                        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+                                                        <Setter Property="Background" Value="#0E4A5C"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -268,7 +365,7 @@
         <StackPanel x:Name="JoystickConfigurationPanel" Visibility="Collapsed">
             <TextBlock Text="ÉTAPE 4 / 5 · TEST DES JOYSTICKS" FontWeight="SemiBold"
                        Foreground="{DynamicResource AppAccentBrush}" Margin="0,0,0,12"/>
-            <TextBlock Text="Suivez le point cible" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Suivez le point cible" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <TextBlock Text="Placez le joystick demandé vers le cercle bleu, maintenez la position, puis validez. Laissez l’autre joystick et les gâchettes au repos."
                        TextWrapping="Wrap" Margin="0,0,0,20"/>
             <Border Style="{StaticResource CardStyle}">
@@ -312,18 +409,17 @@
                     <TextBlock x:Name="JoystickTestFeedbackText" TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <StackPanel x:Name="JoystickTestActions" Orientation="Horizontal" Visibility="Collapsed">
                         <Button x:Name="CaptureJoystickPositionButton" Content="Valider la position" IsEnabled="False"
-                                Padding="12,8" Background="{DynamicResource AppAccentBrush}" Foreground="White"
+                                Padding="16,10" Style="{StaticResource PrimaryButtonStyle}"
                                 Click="CaptureJoystickPositionButton_Click"/>
-                        <Button Content="Annuler le test" Padding="12,8" Margin="10,0,0,0"
-                                Background="{DynamicResource AppPanelBrush}" Foreground="{DynamicResource AppForegroundBrush}"
+                        <Button Content="Annuler le test" Padding="16,10" Margin="10,0,0,0"
                                 Click="CancelJoystickTestButton_Click"/>
                     </StackPanel>
                     <Button x:Name="RestartJoystickTestButton" Content="Recommencer le test" Visibility="Collapsed"
-                            HorizontalAlignment="Left" Padding="12,8" Click="StartJoystickTestButton_Click"
-                            Background="{DynamicResource AppPanelBrush}" Foreground="{DynamicResource AppForegroundBrush}"/>
+                            HorizontalAlignment="Left" Padding="16,10" Click="StartJoystickTestButton_Click"/>
                     <Button x:Name="ContinueToButtonsButton" Content="Suivant : boutons et gâchettes"
-                            IsEnabled="False" HorizontalAlignment="Left" Padding="12,8" Margin="0,12,0,0"
-                            Click="ContinueToButtonsButton_Click" Background="{DynamicResource AppAccentBrush}" Foreground="White"/>
+                            IsEnabled="False" HorizontalAlignment="Left" Padding="16,10" Margin="0,12,0,0"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Click="ContinueToButtonsButton_Click"/>
                 </StackPanel>
             </Border>
         </StackPanel>
@@ -336,7 +432,7 @@
         <StackPanel x:Name="ButtonConfigurationPanel" Visibility="Collapsed">
             <TextBlock Text="ÉTAPE 5 / 5 · BOUTONS ET GÂCHETTES" FontWeight="SemiBold"
                        Foreground="{DynamicResource AppAccentBrush}" Margin="0,0,0,12"/>
-            <TextBlock Text="Associez chaque commande" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBlock Text="Associez chaque commande" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <TextBlock x:Name="ButtonModelText" TextWrapping="Wrap" Margin="0,0,0,16"/>
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
@@ -347,16 +443,19 @@
                     <TextBlock x:Name="ButtonTestFeedbackText" TextWrapping="Wrap" Margin="0,0,0,12"
                                Foreground="{DynamicResource AppSecondaryTextBrush}"/>
                     <Button x:Name="BeginButtonTestButton" Content="Commencer le test des boutons"
-                            HorizontalAlignment="Left" Padding="12,8" Click="BeginButtonTestButton_Click"
-                            Background="{DynamicResource AppAccentBrush}" Foreground="White"/>
+                            HorizontalAlignment="Left" Padding="16,10" Click="BeginButtonTestButton_Click"
+                            Style="{StaticResource PrimaryButtonStyle}"/>
                     <WrapPanel x:Name="ButtonTestActions" Visibility="Collapsed">
+                        <Button x:Name="PreviousButtonInputButton" Content="Commande précédente"
+                                IsEnabled="False" Padding="16,10" Margin="0,0,10,8"
+                                Click="PreviousButtonInputButton_Click"/>
                         <Button x:Name="SkipButtonInputButton" Content="Commande non détectée / absente"
-                                Padding="12,8" Margin="0,0,0,8" Click="SkipButtonInputButton_Click"
-                                Background="{DynamicResource AppPanelBrush}" Foreground="{DynamicResource AppForegroundBrush}"/>
+                                Padding="16,10" Margin="0,0,0,8" Click="SkipButtonInputButton_Click"/>
                     </WrapPanel>
                     <Button x:Name="SaveButtonConfigurationButton" Content="Enregistrer les boutons"
-                            IsEnabled="False" Visibility="Collapsed" HorizontalAlignment="Left" Padding="12,8"
-                            Click="SaveButtonConfigurationButton_Click" Background="{DynamicResource AppAccentBrush}" Foreground="White"/>
+                            IsEnabled="False" Visibility="Collapsed" HorizontalAlignment="Left" Padding="16,10"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Click="SaveButtonConfigurationButton_Click"/>
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource CardStyle}">
@@ -383,10 +482,9 @@
                     <TextBlock Text="Le bouton Enregistrer conserve votre profil dans Documents\InputOS\profils. Envoyer le diagnostic transmet le modèle et les associations des commandes aux développeurs, sans compte GitHub. Une issue publique est créée automatiquement ; aucun nom de compte Windows ni identifiant unique du périphérique n’est envoyé."
                                TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryTextBrush}" Margin="0,0,0,12"/>
                     <WrapPanel>
-                        <Button Content="Enregistrer" Padding="12,8" Margin="0,0,8,8" Click="SaveLocalProfileButton_Click"
-                                Background="{DynamicResource AppAccentBrush}" Foreground="White"/>
-                        <Button x:Name="SendDiagnosticButton" Content="Envoyer le diagnostic" Padding="12,8" Margin="0,0,0,8" Click="SendDiagnosticButton_Click"
-                                Background="{DynamicResource AppPanelBrush}" Foreground="{DynamicResource AppForegroundBrush}"/>
+                        <Button Content="Enregistrer" Padding="16,10" Margin="0,0,8,8" Click="SaveLocalProfileButton_Click"
+                                Style="{StaticResource PrimaryButtonStyle}"/>
+                        <Button x:Name="SendDiagnosticButton" Content="Envoyer le diagnostic" Padding="16,10" Margin="0,0,0,8" Click="SendDiagnosticButton_Click"/>
                     </WrapPanel>
                     <TextBlock x:Name="ProfileExportFeedbackText" Text="L’envoi se fait directement depuis InputOS. Le profil local et l’envoi du diagnostic sont indépendants."
                                TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryTextBrush}"/>

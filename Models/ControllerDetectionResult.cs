@@ -16,6 +16,7 @@ public sealed record ControllerDetectionResult(
     string[] SwitchPositions)
 {
     public bool? MicrophonePressed { get; init; }
+    public string InputReadingFormat { get; init; } = "WindowsRaw";
 }
 
 // ============================================================================

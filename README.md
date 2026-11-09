@@ -1,6 +1,6 @@
 # InputOS
 
-Current version: **v1.1.1**.
+Current version: **v1.2.0**.
 
 ## Organisation du projet
 
@@ -51,6 +51,20 @@ The project aims to provide a simple interface for checking controller inputs an
 ---
 
 ## ✨ Features
+
+### New in v1.2.0
+
+These changes have been built; real-hardware testing is still pending.
+
+- Dark interface palette, with a clearer layout of the device list and the information panel.
+- DualShock 4 and Xbox controller illustrations on the home screen and in the controller cards.
+- Controller name deduced from its VID/PID for integrated profiles, instead of the generic Windows name (for example "HID-compliant game controller" over Bluetooth).
+- New **Cache** category in Settings: saved profiles, logs, and miscellaneous settings, each with its stored size, and a warning before deletion.
+- Interface language selection (French or English) in Settings; the new language is applied after restarting InputOS.
+- When an official profile applies to a controller, its temporary local profile is moved to an `archive` folder instead of being deleted.
+- The Xbox/Guide button is no longer requested in the **Suggest Controller** workflow for Xbox controllers.
+
+The Nintendo Switch Pro controller is still under development and has not been validated: it is not supported.
 
 ### New in v1.1.1
 
@@ -192,23 +206,23 @@ section of this repository.
 Then run:
 
 ```text
-InputOS-Setup-v1.1.1.exe
+InputOS-Setup-v1.2.0.exe
 ```
 
 ### Upgrading from v1.0.0
 
-Close InputOS using its system tray icon before running `InputOS-Setup-v1.1.1.exe`.
+Close InputOS using its system tray icon before running `InputOS-Setup-v1.2.0.exe`.
 
-The migration installer detects the previous installation and offers to remove it before installing v1.1.1 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
+The migration installer detects the previous installation and offers to remove it before installing v1.2.0 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
 
-### Updating from v1.1.0
+### Updating from v1.1.1
 
-Once v1.1.1 and its update packages are published in a stable GitHub release, installed copies of v1.1.0 can download the update automatically. The downloaded update is applied on the next launch. You can also check for updates in Settings or run the v1.1.1 installer manually.
+Once v1.2.0 and its update packages are published in a stable GitHub release, installed copies of v1.1.1 can download the update automatically. The downloaded update is applied on the next launch. You can also check for updates in Settings or run the v1.2.0 installer manually.
 
 The portable version is available as `InputOS-win-Portable.zip` and must be updated manually.
 
 ---
 
-## Planned for v1.1.2
+## Planned
 
-**Manual Detection** is planned for v1.1.2 and is not included in v1.1.1.
+**Manual Detection** is planned for a later version and is not included in v1.2.0.

@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using InputOS.Models;
 using Windows.Gaming.Input;
 
@@ -41,15 +42,17 @@ public static class ControllerAutoDetectionService
     public static ControllerDetectionResult Detect(
         RawGameController controller)
     {
+        if (NintendoProControllerReader.IsSupported(controller))
+            throw new InvalidOperationException(Tr("Cette Switch Pro nécessite une lecture HID Nintendo."));
         if (controller.IsWireless)
         {
-            throw new InvalidOperationException("Une connexion filaire est requise.");
+            throw new InvalidOperationException(Tr("Une connexion filaire est requise."));
         }
 
 
         if (!RawGameController.RawGameControllers.Contains(controller))
         {
-            throw new InvalidOperationException("La manette est déconnectée.");
+            throw new InvalidOperationException(Tr("La manette est déconnectée."));
         }
 
 
@@ -83,14 +86,14 @@ public static class ControllerAutoDetectionService
 
                 labels[i] =
                     label == GameControllerButtonLabel.None
-                        ? "Non identifié"
+                        ? Tr("Non identifié")
                         : label.ToString();
             }
             catch (Exception)
             {
                 // Certains pilotes ne fournissent pas les noms des boutons.
                 labels[i] =
-                    "Non identifié";
+                    Tr("Non identifié");
             }
         }
 
@@ -112,7 +115,7 @@ public static class ControllerAutoDetectionService
 
         if (!RawGameController.RawGameControllers.Contains(controller))
         {
-            throw new InvalidOperationException("La manette est déconnectée.");
+            throw new InvalidOperationException(Tr("La manette est déconnectée."));
         }
 
 

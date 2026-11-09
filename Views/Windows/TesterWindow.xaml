@@ -7,52 +7,106 @@
 
         Title="InputOS - Test de la manette"
         Icon="/InputOS;component/Assets/Icons/iOSWhite.ico"
-        Width="850"
-        Height="700"
-        MinWidth="700"
+        Width="900"
+        Height="780"
+        MinWidth="760"
         MinHeight="600"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource AppForegroundBrush}">
+
+    <Window.Resources>
+
+        <!-- =====================================================================
+             STYLE
+             ===================================================================== -->
+
+        <Style x:Key="CardStyle"
+               TargetType="Border">
+
+            <Setter Property="Background"
+                    Value="{DynamicResource AppCardBrush}"/>
+
+            <Setter Property="CornerRadius"
+                    Value="14"/>
+
+            <Setter Property="Padding"
+                    Value="22"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,0,16"/>
+
+        </Style>
+
+
+        <Style x:Key="SectionTitleStyle"
+               TargetType="TextBlock">
+
+            <Setter Property="FontSize"
+                    Value="12"/>
+
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+
+            <Setter Property="Foreground"
+                    Value="{DynamicResource AppSecondaryTextBrush}"/>
+
+            <Setter Property="Margin"
+                    Value="0,0,0,16"/>
+
+        </Style>
+
+
+        <Style x:Key="StickBorderStyle"
+               TargetType="Border">
+
+            <Setter Property="Width"
+                    Value="200"/>
+
+            <Setter Property="Height"
+                    Value="200"/>
+
+            <Setter Property="Background"
+                    Value="{DynamicResource AppBackgroundBrush}"/>
+
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource AppBorderBrush}"/>
+
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+
+            <Setter Property="CornerRadius"
+                    Value="100"/>
+
+        </Style>
+
+    </Window.Resources>
+
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
 
-        <StackPanel Margin="15">
+        <StackPanel Margin="28,26,28,12">
 
 
             <!-- =========================================================================
                  FONCTIONNALITÉ : INFORMATIONS MANETTE
                  ========================================================================= -->
 
-            <Border BorderBrush="#808080"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="12"
-                    Margin="0,0,0,20">
+            <StackPanel Margin="0,0,0,22">
 
-                <!-- =====================================================================
-                     STYLE
-                     ===================================================================== -->
+                <TextBlock x:Name="ControllerNameText"
+                           Text="Manette"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           Foreground="White"/>
 
-                <!-- Style Windows basique -->
+                <TextBlock x:Name="ControllerHardwareText"
+                           Text="VID : - | PID : -"
+                           Margin="0,4,0,0"
+                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
 
-
-                <!-- =====================================================================
-                     INTERFACE
-                     ===================================================================== -->
-
-                <StackPanel>
-
-                    <TextBlock x:Name="ControllerNameText"
-                               Text="Manette"
-                               FontSize="18"
-                               FontWeight="Bold"/>
-
-                    <TextBlock x:Name="ControllerHardwareText"
-                               Text="VID : - | PID : -"
-                               Margin="0,5,0,0"/>
-
-                </StackPanel>
-
-            </Border>
+            </StackPanel>
 
             <!-- =========================================================================
                  FIN FONCTIONNALITÉ : INFORMATIONS MANETTE
@@ -61,239 +115,130 @@
 
 
             <!-- =========================================================================
-                 FONCTIONNALITÉ : VALEURS DES AXES
-                 ========================================================================= -->
-
-            <GroupBox Header="Axes"
-                      Margin="0,0,0,20">
-
-                <!-- =====================================================================
-                     STYLE
-                     ===================================================================== -->
-
-                <!-- Style Windows basique -->
-
-
-                <!-- =====================================================================
-                     INTERFACE
-                     ===================================================================== -->
-
-                <Grid Margin="10">
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="Left X : "/>
-                            <Run x:Name="LeftXText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="Left Y : "/>
-                            <Run x:Name="LeftYText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="L2 : "/>
-                            <Run x:Name="LeftTriggerText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                    </StackPanel>
-
-
-                    <StackPanel Grid.Column="1">
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="Right X : "/>
-                            <Run x:Name="RightXText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="Right Y : "/>
-                            <Run x:Name="RightYText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                        <TextBlock Margin="0,3">
-                            <Run Text="R2 : "/>
-                            <Run x:Name="RightTriggerText"
-                                 Text="0.000"
-                                 FontWeight="Bold"/>
-                        </TextBlock>
-
-                    </StackPanel>
-
-                </Grid>
-
-            </GroupBox>
-
-            <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : VALEURS DES AXES
-                 ========================================================================= -->
-
-
-
-            <!-- =========================================================================
                  FONCTIONNALITÉ : TEST DES STICKS
                  ========================================================================= -->
 
-            <GroupBox Header="Sticks"
-                      Margin="0,0,0,20">
+            <Border Style="{StaticResource CardStyle}">
 
-                <!-- =====================================================================
-                     STYLE
-                     ===================================================================== -->
+                <StackPanel>
 
-                <GroupBox.Resources>
+                    <TextBlock Text="STICKS"
+                               Style="{StaticResource SectionTitleStyle}"/>
 
-                    <Style x:Key="StickBorderStyle"
-                           TargetType="Border">
+                    <Grid>
 
-                        <Setter Property="Width"
-                                Value="200"/>
-
-                        <Setter Property="Height"
-                                Value="200"/>
-
-                        <Setter Property="BorderBrush"
-                                Value="#888888"/>
-
-                        <Setter Property="BorderThickness"
-                                Value="1"/>
-
-                        <Setter Property="CornerRadius"
-                                Value="100"/>
-
-                    </Style>
-
-                </GroupBox.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
 
-                <!-- =====================================================================
-                     INTERFACE
-                     ===================================================================== -->
+                        <StackPanel Grid.Column="0"
+                                    HorizontalAlignment="Center">
 
-                <Grid Margin="20">
+                            <TextBlock Text="Stick gauche"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,10"/>
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource StickBorderStyle}">
 
+                                <Canvas x:Name="LeftStickCanvas"
+                                        Width="198"
+                                        Height="198">
 
-                    <StackPanel Grid.Column="0"
-                                HorizontalAlignment="Center">
+                                    <Line X1="99"
+                                          Y1="0"
+                                          X2="99"
+                                          Y2="198"
+                                          Stroke="{DynamicResource AppBorderBrush}"
+                                          StrokeThickness="1"/>
 
-                        <TextBlock Text="Stick gauche"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
+                                    <Line X1="0"
+                                          Y1="99"
+                                          X2="198"
+                                          Y2="99"
+                                          Stroke="{DynamicResource AppBorderBrush}"
+                                          StrokeThickness="1"/>
 
-                        <Border Style="{StaticResource StickBorderStyle}">
+                                    <Ellipse x:Name="LeftStickPoint"
+                                             Width="10"
+                                             Height="10"
+                                             Fill="{DynamicResource AppAccentBrush}"
+                                             Canvas.Left="94"
+                                             Canvas.Top="94"/>
 
-                            <Canvas x:Name="LeftStickCanvas"
-                                    Width="198"
-                                    Height="198">
+                                </Canvas>
 
-                                <Line X1="99"
-                                      Y1="0"
-                                      X2="99"
-                                      Y2="198"
-                                      Stroke="#AAAAAA"
-                                      StrokeThickness="1"/>
-
-                                <Line X1="0"
-                                      Y1="99"
-                                      X2="198"
-                                      Y2="99"
-                                      Stroke="#AAAAAA"
-                                      StrokeThickness="1"/>
-
-                                <Ellipse x:Name="LeftStickPoint"
-                                         Width="10"
-                                         Height="10"
-                                         Fill="Black"
-                                         Canvas.Left="94"
-                                         Canvas.Top="94"/>
-
-                            </Canvas>
-
-                        </Border>
+                            </Border>
 
 
-                        <CheckBox x:Name="LeftInvertYAxisCheckBox"
-                                  Content="Inverser l'axe Y"
-                                  Margin="0,12,0,0"
-                                  HorizontalAlignment="Center"
-                                  Checked="LeftInvertYAxisCheckBox_Changed"
-                                  Unchecked="LeftInvertYAxisCheckBox_Changed"/>
+                            <CheckBox x:Name="LeftInvertYAxisCheckBox"
+                                      Content="Inverser l'axe Y"
+                                      Margin="0,14,0,0"
+                                      HorizontalAlignment="Center"
+                                      Foreground="{DynamicResource AppForegroundBrush}"
+                                      Checked="LeftInvertYAxisCheckBox_Changed"
+                                      Unchecked="LeftInvertYAxisCheckBox_Changed"/>
 
-                    </StackPanel>
-
-
-                    <StackPanel Grid.Column="1"
-                                HorizontalAlignment="Center">
-
-                        <TextBlock Text="Stick droit"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-
-                        <Border Style="{StaticResource StickBorderStyle}">
-
-                            <Canvas x:Name="RightStickCanvas"
-                                    Width="198"
-                                    Height="198">
-
-                                <Line X1="99"
-                                      Y1="0"
-                                      X2="99"
-                                      Y2="198"
-                                      Stroke="#AAAAAA"
-                                      StrokeThickness="1"/>
-
-                                <Line X1="0"
-                                      Y1="99"
-                                      X2="198"
-                                      Y2="99"
-                                      Stroke="#AAAAAA"
-                                      StrokeThickness="1"/>
-
-                                <Ellipse x:Name="RightStickPoint"
-                                         Width="10"
-                                         Height="10"
-                                         Fill="Black"
-                                         Canvas.Left="94"
-                                         Canvas.Top="94"/>
-
-                            </Canvas>
-
-                        </Border>
+                        </StackPanel>
 
 
-                        <CheckBox x:Name="RightInvertYAxisCheckBox"
-                                  Content="Inverser l'axe Y"
-                                  Margin="0,12,0,0"
-                                  HorizontalAlignment="Center"
-                                  Checked="RightInvertYAxisCheckBox_Changed"
-                                  Unchecked="RightInvertYAxisCheckBox_Changed"/>
+                        <StackPanel Grid.Column="1"
+                                    HorizontalAlignment="Center">
 
-                    </StackPanel>
+                            <TextBlock Text="Stick droit"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,10"/>
 
-                </Grid>
+                            <Border Style="{StaticResource StickBorderStyle}">
 
-            </GroupBox>
+                                <Canvas x:Name="RightStickCanvas"
+                                        Width="198"
+                                        Height="198">
+
+                                    <Line X1="99"
+                                          Y1="0"
+                                          X2="99"
+                                          Y2="198"
+                                          Stroke="{DynamicResource AppBorderBrush}"
+                                          StrokeThickness="1"/>
+
+                                    <Line X1="0"
+                                          Y1="99"
+                                          X2="198"
+                                          Y2="99"
+                                          Stroke="{DynamicResource AppBorderBrush}"
+                                          StrokeThickness="1"/>
+
+                                    <Ellipse x:Name="RightStickPoint"
+                                             Width="10"
+                                             Height="10"
+                                             Fill="{DynamicResource AppAccentBrush}"
+                                             Canvas.Left="94"
+                                             Canvas.Top="94"/>
+
+                                </Canvas>
+
+                            </Border>
+
+
+                            <CheckBox x:Name="RightInvertYAxisCheckBox"
+                                      Content="Inverser l'axe Y"
+                                      Margin="0,14,0,0"
+                                      HorizontalAlignment="Center"
+                                      Foreground="{DynamicResource AppForegroundBrush}"
+                                      Checked="RightInvertYAxisCheckBox_Changed"
+                                      Unchecked="RightInvertYAxisCheckBox_Changed"/>
+
+                        </StackPanel>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
 
             <!-- =========================================================================
                  FIN FONCTIONNALITÉ : TEST DES STICKS
@@ -301,69 +246,157 @@
 
 
 
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+
+                <!-- =====================================================================
+                     FONCTIONNALITÉ : VALEURS DES AXES
+                     ===================================================================== -->
+
+                <Border Grid.Column="0"
+                        Style="{StaticResource CardStyle}">
+
+                    <StackPanel>
+
+                        <TextBlock Text="AXES"
+                                   Style="{StaticResource SectionTitleStyle}"/>
+
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="Left X : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="LeftXText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="Left Y : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="LeftYText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="L2 : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="LeftTriggerText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                            </StackPanel>
+
+
+                            <StackPanel Grid.Column="1">
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="Right X : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="RightXText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="Right Y : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="RightYText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                                <TextBlock Margin="0,4">
+                                    <Run Text="R2 : "
+                                         Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    <Run x:Name="RightTriggerText"
+                                         Text="0.000"
+                                         FontWeight="Bold"/>
+                                </TextBlock>
+
+                            </StackPanel>
+
+                        </Grid>
+
+                    </StackPanel>
+
+                </Border>
+
+                <!-- =====================================================================
+                     FIN FONCTIONNALITÉ : VALEURS DES AXES
+                     ===================================================================== -->
+
+
+                <!-- =====================================================================
+                     FONCTIONNALITÉ : D-PAD
+                     ===================================================================== -->
+
+                <Border Grid.Column="2"
+                        Style="{StaticResource CardStyle}">
+
+                    <StackPanel>
+
+                        <TextBlock Text="CROIX (D-PAD)"
+                                   Style="{StaticResource SectionTitleStyle}"/>
+
+                        <TextBlock Text="Direction actuelle"
+                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+
+                        <TextBlock x:Name="DPadText"
+                                   Text="Neutre"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource AppAccentBrush}"
+                                   Margin="0,6,0,0"/>
+
+                    </StackPanel>
+
+                </Border>
+
+                <!-- =====================================================================
+                     FIN FONCTIONNALITÉ : D-PAD
+                     ===================================================================== -->
+
+            </Grid>
+
+
+
             <!-- =========================================================================
                  FONCTIONNALITÉ : TEST DES BOUTONS
                  ========================================================================= -->
 
-            <GroupBox Header="Boutons"
-                      Margin="0,0,0,20">
+            <Border Style="{StaticResource CardStyle}">
 
-                <!-- =====================================================================
-                     STYLE
-                     ===================================================================== -->
+                <StackPanel>
 
-                <!-- Les boutons sont générés dynamiquement en C# -->
+                    <TextBlock Text="BOUTONS"
+                               Style="{StaticResource SectionTitleStyle}"/>
 
+                    <!-- Les boutons sont générés dynamiquement en C# -->
 
-                <!-- =====================================================================
-                     INTERFACE
-                     ===================================================================== -->
-
-                <WrapPanel x:Name="ButtonsPanel"
-                           Margin="10"/>
-
-            </GroupBox>
-
-            <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : TEST DES BOUTONS
-                 ========================================================================= -->
-
-
-
-            <!-- =========================================================================
-                 FONCTIONNALITÉ : D-PAD
-                 ========================================================================= -->
-
-            <GroupBox Header="D-Pad"
-                      Margin="0,0,0,20">
-
-                <!-- =====================================================================
-                     STYLE
-                     ===================================================================== -->
-
-                <!-- Style Windows basique -->
-
-
-                <!-- =====================================================================
-                     INTERFACE
-                     ===================================================================== -->
-
-                <StackPanel Margin="10">
-
-                    <TextBlock Text="Direction actuelle :"/>
-
-                    <TextBlock x:Name="DPadText"
-                               Text="Neutre"
-                               FontSize="18"
-                               FontWeight="Bold"
-                               Margin="0,5,0,0"/>
+                    <WrapPanel x:Name="ButtonsPanel"/>
 
                 </StackPanel>
 
-            </GroupBox>
+            </Border>
 
             <!-- =========================================================================
-                 FIN FONCTIONNALITÉ : D-PAD
+                 FIN FONCTIONNALITÉ : TEST DES BOUTONS
                  ========================================================================= -->
 
 

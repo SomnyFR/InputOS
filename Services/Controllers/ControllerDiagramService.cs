@@ -1,3 +1,4 @@
+using static InputOS.Services.LocalizationService;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -12,6 +13,33 @@ public static class ControllerDiagramService
     // ============================================================================
     // FONCTIONNALITÉ : SILHOUETTE ET COMMANDES PAR FAMILLE DE MANETTE
     // ============================================================================
+    // Repère Xbox : l'image de référence (607 × 428) est ramenée au canevas 480 × 330, avec de la place
+    // au-dessus pour les gâchettes. XboxPoint convertit un point de l'image dans le repère de la page.
+    private const double XboxScale = .7;
+    private const double XboxOffsetX = 27.5;
+    private const double XboxOffsetY = 30;
+
+    private static Point XboxPoint(double x, double y) =>
+        new(x * XboxScale + XboxOffsetX, y * XboxScale + XboxOffsetY);
+
+    private static readonly Point XboxFacesCenter = XboxPoint(456, 116);
+    private static readonly Point XboxDpadCenter = XboxPoint(222, 215);
+
+    // Position de chaque commande Xbox (Guide, Vue, Menu, Partage, sticks, pare-chocs, gâchettes).
+    private static readonly Dictionary<string, Point> XboxPositions = new()
+    {
+        ["LeftStick"] = XboxPoint(150, 115),
+        ["RightStick"] = XboxPoint(380, 208),
+        ["Home"] = XboxPoint(300, 55),
+        ["MenuLeft"] = XboxPoint(258, 115),
+        ["MenuRight"] = XboxPoint(345, 115),
+        ["Capture"] = XboxPoint(302, 148),
+        ["LeftShoulder"] = XboxPoint(150, 24),
+        ["RightShoulder"] = XboxPoint(455, 24),
+        ["LeftTrigger"] = new(XboxPoint(150, 0).X, 17),
+        ["RightTrigger"] = new(XboxPoint(455, 0).X, 17)
+    };
+
     public static Dictionary<string, Border> Draw(Canvas canvas, string model, ControllerButtonDefinition[] definitions)
     {
         canvas.Children.Clear();
@@ -30,8 +58,10 @@ public static class ControllerDiagramService
         Geometry bodyGeometry = Geometry.Parse(outline);
         if (xbox)
         {
-            bodyGeometry = bodyGeometry.Clone();
-            bodyGeometry.Transform = new MatrixTransform(.9, 0, 0, 1, 24, 0);
+            // Silhouette Xbox One dessinée dans le repère de Assets/Images/xbox-controller.png (607 × 428),
+            // ramenée au repère 480 × 330 de la page ; les marqueurs ci-dessous suivent la même échelle.
+            bodyGeometry = Geometry.Parse("M92,50 C120,18 175,12 210,28 C250,38 350,38 395,28 C435,12 490,18 520,50 C560,100 600,250 590,340 C585,395 540,425 500,410 C470,400 450,330 420,310 C380,290 230,290 190,310 C160,330 140,400 107,410 C65,425 20,395 15,340 C5,250 45,100 92,50 Z").Clone();
+            bodyGeometry.Transform = new MatrixTransform(XboxScale, 0, 0, XboxScale, XboxOffsetX, XboxOffsetY);
         }
         if (playStation)
         {
@@ -68,12 +98,12 @@ public static class ControllerDiagramService
         const double playStationLeftGroupX = 128;
         const double playStationRightGroupX = 352;
         const double playStationGroupY = 145;
-        AddStickOutline(canvas, symmetric ? 187 : xbox ? 127.5 : 115, symmetric ? 194 : 135);
-        AddStickOutline(canvas, symmetric ? 296 : family == "JoyCon" ? 365 : xbox ? 294 : 300, symmetric ? 194 : xbox ? 199 : 215);
-        AddButtonWell(canvas, symmetric ? playStationRightGroupX : xbox ? 346 : 365,
-            symmetric ? playStationGroupY : xbox ? 135 : 133, symmetric ? 74 : xbox ? 78 : 72);
-        AddButtonWell(canvas, symmetric ? playStationLeftGroupX : family == "JoyCon" ? 115 : xbox ? 168 : 160,
-            symmetric ? playStationGroupY : xbox ? 199 : 215, symmetric || xbox ? 68 : 76);
+        AddStickOutline(canvas, symmetric ? 187 : xbox ? XboxPoint(150, 115).X : 115, symmetric ? 194 : xbox ? XboxPoint(150, 115).Y : 135);
+        AddStickOutline(canvas, symmetric ? 296 : family == "JoyCon" ? 365 : xbox ? XboxPoint(380, 208).X : 300, symmetric ? 194 : xbox ? XboxPoint(380, 208).Y : 215);
+        AddButtonWell(canvas, symmetric ? playStationRightGroupX : xbox ? XboxFacesCenter.X : 365,
+            symmetric ? playStationGroupY : xbox ? XboxFacesCenter.Y : 133, symmetric ? 74 : xbox ? 96 : 72);
+        AddButtonWell(canvas, symmetric ? playStationLeftGroupX : family == "JoyCon" ? 115 : xbox ? XboxDpadCenter.X : 160,
+            symmetric ? playStationGroupY : xbox ? XboxDpadCenter.Y : 215, symmetric || xbox ? 68 : 76);
 
         foreach (var definition in definitions)
         {
@@ -85,7 +115,7 @@ public static class ControllerDiagramService
             double height = definition.IsTrigger ? 32 : shoulder ? 16 : stick ? 46 : 30;
             var label = new TextBlock
             {
-                Text = petal || face || (playStation && stick) ? "" : definition.Label, FontSize = definition.Label.Length > 2 ? 10 : 14,
+                Text = petal || face || (playStation && stick) ? "" : Tr(definition.Label), FontSize = definition.Label.Length > 2 ? 10 : 14,
                 FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -93,25 +123,25 @@ public static class ControllerDiagramService
             {
                 Width = width, Height = height, BorderThickness = new Thickness(1.5),
                 CornerRadius = new CornerRadius(definition.Id == "Touchpad" || definition.IsTrigger ? 7 : height / 2),
-                Child = label, ToolTip = definition.Name
+                Child = label, ToolTip = Services.LocalizationService.Tr(definition.Name)
             };
             double x = definition.X, y = definition.Y;
             if (xbox)
             {
-                x = 240 + (x - 240) * .9;
+                if (XboxPositions.TryGetValue(definition.Id, out var xboxPosition))
+                    (x, y) = (xboxPosition.X, xboxPosition.Y);
+                else
+                    x = 240 + (x - 240) * .9;
                 if (stick)
-                {
                     label.Text = "";
-                    if (definition.Id == "RightStick") y = 199;
-                }
                 if (definition.IsTrigger) { marker.Width = width = 48; }
                 if (definition.Id.StartsWith("Face"))
                 {
                     double angle = definition.Id switch { "FaceTop" => 0, "FaceRight" => 90, "FaceBottom" => 180, _ => 270 };
-                    x = 346 + Math.Sin(angle * Math.PI / 180) * 23;
-                    y = 135 - Math.Cos(angle * Math.PI / 180) * 23;
-                    marker.Width = marker.Height = width = height = 26;
-                    marker.CornerRadius = new CornerRadius(13);
+                    x = XboxFacesCenter.X + Math.Sin(angle * Math.PI / 180) * 29;
+                    y = XboxFacesCenter.Y - Math.Cos(angle * Math.PI / 180) * 29;
+                    marker.Width = marker.Height = width = height = 28;
+                    marker.CornerRadius = new CornerRadius(14);
                     var color = definition.Id switch
                     {
                         "FaceBottom" => System.Windows.Media.Color.FromRgb(84,157,60),
@@ -126,8 +156,8 @@ public static class ControllerDiagramService
                 if (definition.IsDirection)
                 {
                     double angle = definition.Id switch { "DpadUp" => 0, "DpadRight" => 90, "DpadDown" => 180, _ => 270 };
-                    x = 168 + Math.Sin(angle * Math.PI / 180) * 18;
-                    y = 199 - Math.Cos(angle * Math.PI / 180) * 18;
+                    x = XboxDpadCenter.X + Math.Sin(angle * Math.PI / 180) * 18;
+                    y = XboxDpadCenter.Y - Math.Cos(angle * Math.PI / 180) * 18;
                     marker.Width = marker.Height = width = height = 23;
                     label.Text = "";
                     marker.ButtonShape = Geometry.Parse("M5,0 L18,0 Q23,0 23,5 L23,13 Q23,16 20,19 L13.5,26 Q11.5,28 9.5,26 L3,19 Q0,16 0,13 L0,5 Q0,0 5,0 Z").Clone();
@@ -143,7 +173,6 @@ public static class ControllerDiagramService
                     marker.Width = width = definition.Id == "Capture" ? 28 : definition.Id == "Home" ? 34 : 24;
                     marker.Height = height = definition.Id == "Capture" ? 16 : width;
                     marker.CornerRadius = new CornerRadius(height / 2);
-                    if (definition.Id == "Capture") y = 170;
                     marker.SymbolShape = definition.Id switch
                     {
                         "MenuLeft" => Geometry.Parse("M6,6 L14,6 L14,14 L6,14 Z M10,10 L18,10 L18,18 L10,18 Z"),
@@ -231,7 +260,7 @@ public static class ControllerDiagramService
         }
         if (definitions.Any(button => button.Id.StartsWith("Paddle") || button.Id.StartsWith("Back")))
         {
-            var legend = new TextBlock { Text = "Commandes arrière", FontSize = 11 };
+            var legend = new TextBlock { Text = Tr("Commandes arrière"), FontSize = 11 };
             legend.SetResourceReference(TextBlock.ForegroundProperty, "AppSecondaryTextBrush");
             Canvas.SetLeft(legend, 180); Canvas.SetTop(legend, 312);
             canvas.Children.Add(legend);
