@@ -26,8 +26,7 @@ public sealed class ControllerButtonConfigurationService
     {
         Definitions = ControllerButtonCatalogService.GetButtons(model);
         restAxes = (double[])rest.Clone();
-        joystickAxes = new(new[] { joysticks.LeftX.AxisIndex, joysticks.LeftY.AxisIndex,
-            joysticks.RightX.AxisIndex, joysticks.RightY.AxisIndex });
+        joystickAxes = new(joysticks.StickAxes().Select(axis => axis.AxisIndex));
     }
 
     public bool IsAtRest(ControllerDetectionResult reading) =>

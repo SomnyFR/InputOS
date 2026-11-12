@@ -17,7 +17,7 @@ public static class ControllerProfileExportService
     {
         string directory = GetProfilesDirectory();
         Directory.CreateDirectory(directory);
-        string path = Path.Combine(directory, $"InputOS-{draft.VendorId:X4}-{draft.ProductId:X4}.json");
+        string path = Path.Combine(directory, ControllerLocalProfileService.GetProfileFileName(draft.VendorId, draft.ProductId, draft.Connection));
         Save(path, draft);
         return path;
     }
@@ -51,13 +51,14 @@ public static class ControllerProfileExportService
         // sans identifiant de périphérique, chemin local ni nom de compte Windows.
         return JsonSerializer.Serialize(new
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             ProfileType = "UserConfiguration",
             ValidatedByInputOS = false,
             Model = draft.Name,
             VendorId = draft.VendorId,
             ProductId = draft.ProductId,
-            Connection = "USB",
+            Connection = draft.Connection,
+            draft.ControllerType,
             draft.Detection.InputReadingFormat,
             ButtonCount = draft.Detection.ButtonStates.Length,
             AxisCount = draft.Detection.AxisValues.Length,
@@ -84,7 +85,7 @@ public static class ControllerProfileExportService
 
     public static string CreateIssueBody(ControllerConfigurationDraft draft) =>
         $"### Proposition de profil InputOS\n\n" +
-        $"Modèle : {draft.Name}\n\nVID : {draft.VendorId:X4} · PID : {draft.ProductId:X4} · USB\n\n" +
+        $"Modèle : {draft.Name}\n\nVID : {draft.VendorId:X4} · PID : {draft.ProductId:X4} · {draft.Connection}\n\n" +
         "Configuration réalisée par l’utilisateur, à vérifier avant intégration dans InputOS.\n\n" +
         "### Configuration et diagnostic\n\n```json\n" + CreateJson(draft, false) + "\n```\n\n" +
         "### Informations complémentaires\n\nAjoutez ici les éventuels problèmes rencontrés.";

@@ -10,7 +10,17 @@ public sealed record JoystickAxisConfiguration(
     double PositiveEnd,
     double NegativeEnd)
 {
+    // Profils v1 : tous les axes sont des sticks, non inversés.
+    public string Type { get; init; } = "Stick";
+    public bool Inverted { get; init; }
+
     public double Normalize(double rawValue)
+    {
+        double value = NormalizeRaw(rawValue);
+        return Inverted ? -value : value;
+    }
+
+    private double NormalizeRaw(double rawValue)
     {
         double delta = rawValue - Center;
         double positiveDelta = PositiveEnd - Center;
@@ -25,11 +35,20 @@ public sealed record JoystickAxisConfiguration(
     }
 }
 
+// Les sticks sont des paires X/Y optionnelles ; Axes contient les autres axes (gâchette, manette des gaz, curseur, molette).
 public sealed record JoystickConfiguration(
-    JoystickAxisConfiguration LeftX,
-    JoystickAxisConfiguration LeftY,
-    JoystickAxisConfiguration RightX,
-    JoystickAxisConfiguration RightY);
+    JoystickAxisConfiguration? LeftX,
+    JoystickAxisConfiguration? LeftY,
+    JoystickAxisConfiguration? RightX,
+    JoystickAxisConfiguration? RightY)
+{
+    public JoystickAxisConfiguration[] Axes { get; init; } = [];
+
+    public JoystickAxisConfiguration[] StickAxes() =>
+        new[] { LeftX, LeftY, RightX, RightY }.OfType<JoystickAxisConfiguration>().ToArray();
+
+    public JoystickAxisConfiguration[] AllAxes() => [.. StickAxes(), .. Axes];
+}
 
 // ============================================================================
 // FIN FONCTIONNALITÉ : AXES IDENTIFIÉS PAR LE TEST DES JOYSTICKS

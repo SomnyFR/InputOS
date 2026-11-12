@@ -6,5 +6,7 @@ public sealed record ControllerLocalProfile(
     int ButtonCount, int AxisCount, int SwitchCount,
     JoystickConfiguration Joysticks, ControllerButtonConfiguration Buttons)
 {
+    // Profils v1 : toujours un gamepad.
+    public string ControllerType { get; init; } = "Gamepad";
     public string InputReadingFormat { get; init; } = "WindowsRaw";
 }

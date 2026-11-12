@@ -455,8 +455,8 @@ public partial class TesterWindow : Window
     private ControllerAxisMapping GetAxisMapping()
     {
         if (inputProfile != null)
-            return new(inputProfile.Joysticks.LeftX.AxisIndex, inputProfile.Joysticks.LeftY.AxisIndex,
-                inputProfile.Joysticks.RightX.AxisIndex, inputProfile.Joysticks.RightY.AxisIndex,
+            return new(inputProfile.Joysticks.LeftX?.AxisIndex ?? -1, inputProfile.Joysticks.LeftY?.AxisIndex ?? -1,
+                inputProfile.Joysticks.RightX?.AxisIndex ?? -1, inputProfile.Joysticks.RightY?.AxisIndex ?? -1,
                 inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
                 inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
         if (controller.HardwareVendorId ==
@@ -581,8 +581,8 @@ public partial class TesterWindow : Window
             axisValues[axisIndex];
         if (inputProfile != null)
         {
-            var axis = new[] { inputProfile.Joysticks.LeftX, inputProfile.Joysticks.LeftY,
-                inputProfile.Joysticks.RightX, inputProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
+            var axis = inputProfile.Joysticks.AllAxes().FirstOrDefault(a => a.AxisIndex == axisIndex);
+            if (axis == null) return (rawValue * 2.0) - 1.0;
             double value = axis.Normalize(rawValue);
             return axis == inputProfile.Joysticks.LeftY || axis == inputProfile.Joysticks.RightY ? -value : value;
         }

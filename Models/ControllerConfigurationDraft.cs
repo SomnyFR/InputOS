@@ -10,6 +10,10 @@ public sealed record ControllerConfigurationDraft(
     ushort VendorId,
     ushort ProductId)
 {
+    public string Connection { get; init; } = "USB";
+
+    public string ControllerType { get; init; } = "Gamepad";
+
     public ControllerDetectionResult? Detection { get; init; }
 
     public JoystickConfiguration? Joysticks { get; init; }
