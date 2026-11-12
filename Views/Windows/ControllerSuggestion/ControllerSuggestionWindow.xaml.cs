@@ -161,6 +161,7 @@ public partial class ControllerSuggestionWindow : Window
                     SelectedController.HardwareVendorId,
                     SelectedController.HardwareProductId)
                 {
+                    Connection = ControllerLocalProfileService.GetConnection(SelectedController),
                     Detection = previousDetection,
                     Joysticks = previousJoysticks,
                     Buttons = sameModel ? previousButtons : null
@@ -197,7 +198,7 @@ public partial class ControllerSuggestionWindow : Window
         object sender,
         RoutedEventArgs e)
     {
-        if (PendingConfiguration == null || !EnsureWiredConnection())
+        if (PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -320,8 +321,7 @@ public partial class ControllerSuggestionWindow : Window
 
         try
         {
-            if (SelectedController.IsWireless ||
-                !RawGameController.RawGameControllers.Contains(SelectedController))
+            if (!RawGameController.RawGameControllers.Contains(SelectedController))
             {
                 throw new InvalidOperationException(Tr("Manette déconnectée."));
             }
@@ -396,7 +396,7 @@ public partial class ControllerSuggestionWindow : Window
 
 
             AutoDetectionResultText.Text =
-                Tr("Lecture interrompue. Rebranchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS.");
+                Tr("Lecture interrompue. Reconnectez la manette (câble ou Bluetooth). Si nécessaire, annulez et sélectionnez-la de nouveau dans InputOS.");
 
             DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -422,7 +422,7 @@ public partial class ControllerSuggestionWindow : Window
             Visibility.Visible;
 
         StartJoystickTestButton.IsEnabled =
-            joystickTest == null && result.AxisValues.Length >= 4;
+            joystickTest == null;
 
 
         AutoDetectionResultText.Text =
@@ -450,7 +450,7 @@ public partial class ControllerSuggestionWindow : Window
                 JoystickAxisConfiguration? configuredAxis =
                     GetConfiguredJoystickAxis(index);
 
-                bool isJoystick = configuredAxis != null ||
+                bool isJoystick = configuredAxis?.Type == "Stick" ||
                     ControllerAutoDetectionService.IsJoystickAxis(
                         result.VendorId,
                         result.ProductId,
@@ -515,7 +515,7 @@ public partial class ControllerSuggestionWindow : Window
         ClearLiveCommands();
 
 
-        if (PendingConfiguration == null || !EnsureWiredConnection())
+        if (PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -548,7 +548,7 @@ public partial class ControllerSuggestionWindow : Window
             await Task.WhenAll(detection, Task.Delay(450, token));
             token.ThrowIfCancellationRequested();
 
-            if (isClosed || PendingConfiguration == null || !EnsureWiredConnection())
+            if (isClosed || PendingConfiguration == null || !EnsureControllerConnected())
             {
                 return;
             }
@@ -582,7 +582,7 @@ public partial class ControllerSuggestionWindow : Window
                     PendingConfiguration = PendingConfiguration with { Detection = null };
                 }
                 AutoDetectionResultText.Text =
-                    Tr("Impossible de lire la manette. Rebranchez-la en USB et fermez les autres logiciels de manette, puis réessayez.");
+                    Tr("Impossible de lire la manette. Reconnectez-la et fermez les autres logiciels de manette, puis réessayez.");
             }
         }
         finally
@@ -608,13 +608,12 @@ public partial class ControllerSuggestionWindow : Window
 
 
     // ============================================================================
-    // FONCTIONNALITÉ : CONNEXION FILAIRE REQUISE
+    // FONCTIONNALITÉ : MANETTE CONNECTÉE REQUISE
     // ============================================================================
 
-    private bool EnsureWiredConnection()
+    private bool EnsureControllerConnected()
     {
-        if (!SelectedController.IsWireless &&
-            RawGameController.RawGameControllers.Contains(SelectedController))
+        if (RawGameController.RawGameControllers.Contains(SelectedController))
         {
             return true;
         }
@@ -634,15 +633,15 @@ public partial class ControllerSuggestionWindow : Window
 
 
         AutoDetectionResultText.Text =
-            Tr("La manette doit être connectée avec un câble USB pour poursuivre.");
+            Tr("La manette est déconnectée. Reconnectez-la pour poursuivre.");
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
 
         MessageBox.Show(
             this,
-            Tr("Branchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS."),
-            Tr("Connexion filaire requise"),
+            Tr("Reconnectez la manette (câble ou Bluetooth). Si nécessaire, annulez et sélectionnez-la de nouveau dans InputOS."),
+            Tr("Manette déconnectée"),
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 
@@ -651,7 +650,7 @@ public partial class ControllerSuggestionWindow : Window
     }
 
     // ============================================================================
-    // FIN FONCTIONNALITÉ : CONNEXION FILAIRE REQUISE
+    // FIN FONCTIONNALITÉ : MANETTE CONNECTÉE REQUISE
     // ============================================================================
 
 
@@ -724,33 +723,44 @@ public partial class ControllerSuggestionWindow : Window
             return null;
         }
 
-        return new[] { configuration.LeftX, configuration.LeftY,
-            configuration.RightX, configuration.RightY }
-            .FirstOrDefault(axis => axis.AxisIndex == index);
+        return configuration.AllAxes().FirstOrDefault(axis => axis.AxisIndex == index);
     }
 
 
     private void StartJoystickTestButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PendingConfiguration?.Detection == null || !EnsureWiredConnection())
+        if (PendingConfiguration?.Detection == null || !EnsureControllerConnected())
         {
             return;
         }
 
         PendingConfiguration = PendingConfiguration with { Joysticks = null, Buttons = null };
         ContinueToButtonsButton.IsEnabled = false;
+        if (PendingConfiguration.Detection.AxisValues.Length < 2)
+        {
+            // Pas de paire X/Y : aucun stick, les axes éventuels sont repris tels quels.
+            PendingConfiguration = PendingConfiguration with
+            {
+                Joysticks = JoystickConfigurationService.Build(PendingConfiguration.Detection.AxisValues, [])
+            };
+            JoystickConfigurationPanel.Visibility = Visibility.Visible;
+            DetectionResultsPanel.Visibility = Visibility.Collapsed;
+            StopJoystickTest();
+            JoystickTestFeedbackText.Text = Tr("Cette manette a moins de deux axes : aucun joystick à calibrer.");
+            return;
+        }
         DetectionResultsPanel.Visibility = Visibility.Collapsed;
         JoystickConfigurationPanel.Visibility = Visibility.Visible;
         ConfigurationScrollViewer.ScrollToTop();
         RestartJoystickTestButton.Visibility = Visibility.Collapsed;
-        joystickTest = new JoystickConfigurationService();
+        joystickTest = new JoystickConfigurationService(PendingConfiguration.Detection.AxisValues.Length);
         joystickSamples.Clear();
         AutoDetectButton.IsEnabled = false;
         StartJoystickTestButton.IsEnabled = false;
         JoystickTestActions.Visibility = Visibility.Visible;
         CaptureJoystickPositionButton.IsEnabled = false;
         JoystickTestFeedbackText.Text = Tr("Maintenez chaque position jusqu’à la validation. Le test comporte deux positions au repos et huit directions.");
-        JoystickInstructionText.Text = Tf("Étape 1 / 10 · {0}", joystickTest.Instruction);
+        JoystickInstructionText.Text = Tf("Étape {0} / {1} · {2}", 1, joystickTest.TotalSteps, joystickTest.Instruction);
         UpdateJoystickVisual(PendingConfiguration.Detection);
         liveInputTimer.Start();
     }
@@ -758,7 +768,7 @@ public partial class ControllerSuggestionWindow : Window
 
     private void CaptureJoystickPositionButton_Click(object sender, RoutedEventArgs e)
     {
-        if (joystickTest == null || PendingConfiguration == null || !EnsureWiredConnection())
+        if (joystickTest == null || PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -781,7 +791,7 @@ public partial class ControllerSuggestionWindow : Window
                 return;
             }
 
-            JoystickInstructionText.Text = Tf("Étape {0} / 10 · {1}", joystickTest.Step + 1, joystickTest.Instruction);
+            JoystickInstructionText.Text = Tf("Étape {0} / {1} · {2}", joystickTest.Step + 1, joystickTest.TotalSteps, joystickTest.Instruction);
             UpdateJoystickVisual(PendingConfiguration.Detection);
             JoystickTestFeedbackText.Text = Tr("Position validée. Passez à la direction suivante.");
         }
@@ -815,6 +825,10 @@ public partial class ControllerSuggestionWindow : Window
         ContinueToButtonsButton.IsEnabled = configuration != null;
         JoystickInstructionText.Text = configuration == null
             ? Tr("Commencez le test après la détection de la manette.")
+            : configuration.LeftX == null
+                ? Tr("Aucun joystick à calibrer sur cette manette.")
+            : configuration.RightX == null
+                ? Tf("Joystick : X = axe {0}, Y = axe {1}", configuration.LeftX.AxisIndex, configuration.LeftY!.AxisIndex)
             : Tf("Joystick gauche : X = axe {0}, Y = axe {1}\nJoystick droit : X = axe {2}, Y = axe {3}",
                 configuration.LeftX.AxisIndex, configuration.LeftY.AxisIndex,
                 configuration.RightX.AxisIndex, configuration.RightY.AxisIndex);
@@ -851,8 +865,10 @@ public partial class ControllerSuggestionWindow : Window
             return;
         }
 
-        MoveJoystickPoint(LeftJoystickPosition, configuration.LeftX, configuration.LeftY, reading);
-        MoveJoystickPoint(RightJoystickPosition, configuration.RightX, configuration.RightY, reading);
+        if (configuration.LeftX != null && configuration.LeftY != null)
+            MoveJoystickPoint(LeftJoystickPosition, configuration.LeftX, configuration.LeftY, reading);
+        if (configuration.RightX != null && configuration.RightY != null)
+            MoveJoystickPoint(RightJoystickPosition, configuration.RightX, configuration.RightY, reading);
     }
 
     private static void MoveJoystickPoint(FrameworkElement point,

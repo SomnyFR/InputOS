@@ -816,13 +816,12 @@ public partial class MainWindow : Window
         }
 
 
-        if (controller.IsWireless ||
-            !RawGameController.RawGameControllers.Contains(controller))
+        if (!RawGameController.RawGameControllers.Contains(controller))
         {
             MessageBox.Show(
                 this,
-                Tr("Pour suggérer cette manette, branchez-la avec un câble USB, puis sélectionnez sa connexion filaire dans InputOS."),
-                Tr("Connexion filaire requise"),
+                Tr("Cette manette n’est plus connectée. Reconnectez-la, puis réessayez."),
+                Tr("Manette déconnectée"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
 

@@ -19,7 +19,7 @@ public partial class ControllerSuggestionWindow
     private void ContinueToButtonsButton_Click(object sender, RoutedEventArgs e)
     {
         if (PendingConfiguration?.Joysticks == null ||
-            PendingConfiguration.Detection == null || !EnsureWiredConnection()) return;
+            PendingConfiguration.Detection == null || !EnsureControllerConnected()) return;
 
         StopJoystickTest();
         StopButtonTest();
@@ -43,13 +43,13 @@ public partial class ControllerSuggestionWindow
 
     private void BeginButtonTestButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PendingConfiguration?.Joysticks == null || !EnsureWiredConnection()) return;
+        if (PendingConfiguration?.Joysticks == null || !EnsureControllerConnected()) return;
         try
         {
             ControllerDetectionResult rest = ControllerAutoDetectionService.Detect(SelectedController);
             var sticks = PendingConfiguration.Joysticks;
             if (rest.ButtonStates.Any(value => value) || rest.SwitchPositions.Any(value => value != "Center") ||
-                new[] { sticks.LeftX, sticks.LeftY, sticks.RightX, sticks.RightY }
+                sticks.StickAxes()
                     .Any(axis => Math.Abs(axis.Normalize(rest.AxisValues[axis.AxisIndex])) > 0.2))
             {
                 ButtonTestFeedbackText.Text = Tr("Relâchez les boutons, les sticks et les gâchettes avant de commencer.");
@@ -121,7 +121,7 @@ public partial class ControllerSuggestionWindow
 
     private void SkipButtonInputButton_Click(object sender, RoutedEventArgs e)
     {
-        if (buttonTest == null || buttonTest.WaitingForRelease || !EnsureWiredConnection()) return;
+        if (buttonTest == null || buttonTest.WaitingForRelease || !EnsureControllerConnected()) return;
         buttonTest.Skip();
         buttonSamples.Clear();
         UpdateButtonTestInstruction();
@@ -130,7 +130,7 @@ public partial class ControllerSuggestionWindow
 
     private void PreviousButtonInputButton_Click(object sender, RoutedEventArgs e)
     {
-        if (buttonTest == null || buttonTest.WaitingForRelease || !EnsureWiredConnection()) return;
+        if (buttonTest == null || buttonTest.WaitingForRelease || !EnsureControllerConnected()) return;
         if (!buttonTest.GoBack()) return;
         buttonSamples.Clear();
         UpdateButtonTestInstruction();
@@ -140,7 +140,7 @@ public partial class ControllerSuggestionWindow
     private void SaveButtonConfigurationButton_Click(object sender, RoutedEventArgs e)
     {
         if (buttonTest == null || !buttonTest.IsComplete || buttonTest.WaitingForRelease ||
-            PendingConfiguration == null || !EnsureWiredConnection()) return;
+            PendingConfiguration == null || !EnsureControllerConnected()) return;
 
         PendingConfiguration = PendingConfiguration with { Buttons = buttonTest.GetResult() };
         ButtonInstructionText.Text = Tr("Les associations sont enregistrées pour cette configuration.");

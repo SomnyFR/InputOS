@@ -155,7 +155,7 @@
                        TextWrapping="Wrap"
                        Margin="0,0,0,8"/>
 
-            <TextBlock Text="Choisissez un modèle, ou indiquez son nom avec « Autre modèle ». Gardez le câble USB branché."
+            <TextBlock Text="Choisissez un modèle, ou indiquez son nom avec « Autre modèle ». Gardez la manette connectée."
                        TextWrapping="Wrap"
                        Margin="0,0,0,15"/>
 
@@ -221,7 +221,7 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="1. Lire les informations" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                    <TextBlock Text="Posez la manette au repos, avec son câble USB branché."
+                    <TextBlock Text="Posez la manette au repos, en la gardant connectée."
                                TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <Button x:Name="AutoDetectButton" Content="Détecter automatiquement"
                             HorizontalAlignment="Left" Padding="18,11"
@@ -241,7 +241,7 @@
              ========================================================================= -->
         <StackPanel x:Name="DetectionLoadingPanel" Visibility="Collapsed" Margin="0,40,0,0">
             <TextBlock Text="Détection en cours…" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <TextBlock Text="Lecture des informations de votre manette. Gardez le câble USB branché."
+            <TextBlock Text="Lecture des informations de votre manette. Gardez la manette connectée."
                        TextWrapping="Wrap" Margin="0,0,0,20"/>
             <ProgressBar Height="8" IsIndeterminate="True"
                          Foreground="{DynamicResource AppAccentBrush}"/>
