@@ -166,6 +166,7 @@
 
             <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,15">
                 <StackPanel>
+                    <Image x:Name="OtherHardwareImage" Height="70" Stretch="Uniform" HorizontalAlignment="Left" Margin="0,0,0,10"/>
                     <TextBlock Text="Votre matériel n’est pas une manette de la liste ?" FontWeight="SemiBold" Margin="0,0,0,6"/>
                     <TextBlock Text="Volant, joystick, radiocommande de drone, stick arcade… : la configuration libre décrit n’importe quel matériel, entrée par entrée."
                                TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryTextBrush}" Margin="0,0,0,10"/>

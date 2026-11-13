@@ -395,6 +395,8 @@ public partial class TesterWindow : Window
         if (inputProfile == null) return;
         if (inputProfile.ControllerType != "Gamepad")
         {
+            ControllerTypeIllustrationService.UpdateImage(ProfileTypeImage, inputProfile.ControllerType);
+            ProfileTypeImage.Visibility = Visibility.Visible;
             SticksCard.Visibility = Visibility.Collapsed;
             AxesDPadGrid.Visibility = Visibility.Collapsed;
         }

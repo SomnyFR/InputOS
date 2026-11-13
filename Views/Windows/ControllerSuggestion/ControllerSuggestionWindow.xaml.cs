@@ -85,6 +85,7 @@ public partial class ControllerSuggestionWindow : Window
 
 
         InitializeComponent();
+        ControllerTypeIllustrationService.UpdateImage(OtherHardwareImage, "Other");
 
 
         liveInputTimer.Tick +=

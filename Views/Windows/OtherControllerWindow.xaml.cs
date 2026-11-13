@@ -57,6 +57,7 @@ public partial class OtherControllerWindow : Window
         public int Index;
         public Border Card = new();
         public TextBlock Live = new();
+        public System.Windows.Controls.ProgressBar? Bar; // axes : valeur brute 0..1 en direct
         public ComboBox NameBox = new(), Status = new();
         public ComboBox? TypeBox;
         public TextBox? Min, Center, Max, Dead;
@@ -122,6 +123,7 @@ public partial class OtherControllerWindow : Window
         ProfileNameBox.Text = Clean(ControllerCompatibilityService.GetControllerDisplayName(controller));
         ControllerTypeBox.ItemsSource = TypeChoices.Select(t => Tr(t.Label)).ToArray();
         ControllerTypeBox.SelectedIndex = TypeChoices.Length - 1;
+        ControllerTypeIllustrationService.UpdateImage(TypeImage, SelectedType);
         ButtonCountBox.Text = buttonCount.ToString();
         AxisCountBox.Text = axisCount.ToString();
         SwitchCountBox.Text = switchCount.ToString();
@@ -164,10 +166,19 @@ public partial class OtherControllerWindow : Window
         row.NameBox.ToolTip = Tr("Nom de l’entrée : choisissez dans la liste ou saisissez-le (100 caractères maximum).");
         row.Status.ItemsSource = new[] { Tr("À nommer"), Tr("Ignorée"), Tr("Absente") };
         row.Status.SelectedIndex = 0;
-        Grid.SetColumn(row.Live, 1);
+        UIElement liveCell = row.Live;
+        if (kind == "Axis")
+        {
+            row.Bar = new System.Windows.Controls.ProgressBar { Minimum = 0, Maximum = 1, Height = 6, Margin = new Thickness(0, 3, 10, 0) };
+            StackPanel cell = new() { VerticalAlignment = VerticalAlignment.Center };
+            cell.Children.Add(row.Live);
+            cell.Children.Add(row.Bar);
+            liveCell = cell;
+        }
+        Grid.SetColumn(liveCell, 1);
         Grid.SetColumn(row.NameBox, 2);
         Grid.SetColumn(row.Status, 3);
-        foreach (UIElement element in new UIElement[] { label, row.Live, row.NameBox, row.Status }) line.Children.Add(element);
+        foreach (UIElement element in new UIElement[] { label, liveCell, row.NameBox, row.Status }) line.Children.Add(element);
         body.Children.Add(line);
 
         if (kind == "Axis")
@@ -232,6 +243,7 @@ public partial class OtherControllerWindow : Window
 
     private void ControllerTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        ControllerTypeIllustrationService.UpdateImage(TypeImage, SelectedType);
         if (ready) foreach (InputRow row in rows) SetSuggestions(row);
     }
 
@@ -339,6 +351,7 @@ public partial class OtherControllerWindow : Window
                 default:
                     double v = axes[row.Index];
                     row.Live.Text = v.ToString("0.000", CultureInfo.InvariantCulture);
+                    if (row.Bar != null) row.Bar.Value = Math.Clamp(v, 0, 1);
                     if (!row.Manual)
                     {
                         bool changed = v < row.Low || v > row.High;
