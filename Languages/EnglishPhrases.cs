@@ -390,5 +390,18 @@ internal static class EnglishPhrases
         ["{0} : valeurs invalides. Min, centre et max doivent être entre 0 et 1, la zone morte entre 0 et 0,5."] = "{0}: invalid values. Min, center and max must be between 0 and 1, the deadzone between 0 and 0.5.",
         ["{0} : amplitude trop faible. Bougez cet axe de bout en bout, ou réglez Min et Max à la main."] = "{0}: range too small. Move this axis end to end, or set Min and Max by hand.",
         ["{0} : le centre d’un stick doit se trouver entre ses deux extrémités. Choisissez un autre type (gaz, curseur…) ou corrigez le centre."] = "{0}: a stick's center must lie between its two ends. Pick another type (throttle, slider…) or fix the center.",
+        ["Aperçu du diagnostic"] = "Diagnostic preview",
+        ["Envoyer"] = "Send",
+        ["Voici exactement les données qui seront transmises (mises en forme pour la lecture). Une issue publique sera créée sur GitHub, visible par tous. Aucun nom de compte Windows ni identifiant unique du périphérique n’est envoyé."] = "This is exactly the data that will be sent (formatted for reading). A public issue will be created on GitHub, visible to everyone. No Windows account name or unique device identifier is sent.",
+        ["Envoi impossible : terminez la configuration (axes et boutons) avant d’envoyer le diagnostic."] = "Cannot send: finish the configuration (axes and buttons) before sending the diagnostic.",
+        ["Envoi impossible : le profil n’a pas pu être préparé. Refaites la configuration."] = "Cannot send: the profile could not be prepared. Redo the configuration.",
+        ["Enregistrement impossible : terminez la configuration avant d’enregistrer le profil."] = "Cannot save: finish the configuration before saving the profile.",
+        ["le journal des envois de diagnostics"] = "the diagnostic sending log",
+        ["Le service a refusé une calibration d’axe (plage trop faible ou valeur hors limites). Refaites la calibration en bougeant l’axe sur toute sa course."] = "The service rejected an axis calibration (range too small or value out of bounds). Redo the calibration by moving the axis through its full travel.",
+        ["Le service a refusé le profil : le même axe est utilisé deux fois."] = "The service rejected the profile: the same axis is used twice.",
+        ["Le service a refusé un nom (vide, trop long ou avec un caractère interdit). Modifiez le nom de la manette ou des entrées."] = "The service rejected a name (empty, too long or with a forbidden character). Change the controller or input names.",
+        ["Le service n’accepte pas encore ce format de profil. Enregistrez-le localement et réessayez après une mise à jour."] = "The service does not accept this profile format yet. Save it locally and try again after an update.",
+        ["Le profil est trop volumineux pour être envoyé."] = "The profile is too large to be sent.",
+        ["Le service a refusé le profil. Enregistrez-le localement ; vous pourrez réessayer plus tard."] = "The service rejected the profile. Save it locally; you can try again later.",
     };
 }

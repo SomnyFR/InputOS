@@ -270,13 +270,11 @@
                                    FontWeight="SemiBold"/>
                         <TextBlock x:Name="LogsSizeText"
                                    Foreground="{DynamicResource AppSecondaryTextBrush}"/>
-                        <TextBlock Text="{DynamicResource Settings.Cache.NoLogs}"
-                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
                     </StackPanel>
                     <Button Grid.Column="1"
                             Content="{DynamicResource Settings.Cache.Delete}"
                             Padding="12,4"
-                            IsEnabled="False"/>
+                            Click="DeleteLogsButton_Click"/>
                 </Grid>
 
                 <Grid>

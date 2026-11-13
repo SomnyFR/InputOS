@@ -14,7 +14,12 @@ public partial class ControllerSuggestionWindow
 
     private void SaveLocalProfileButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PendingConfiguration?.Buttons == null) return;
+        if (PendingConfiguration?.Buttons == null)
+        {
+            ProfileExportFeedbackText.Text = Tr("Enregistrement impossible : terminez la configuration avant d’enregistrer le profil.");
+            ProfileExportFeedbackText.BringIntoView();
+            return;
+        }
         try
         {
             string path = ControllerProfileExportService.SaveToProfilesDirectory(PendingConfiguration);
@@ -26,36 +31,59 @@ public partial class ControllerSuggestionWindow
         }
     }
 
+    // Le résultat est écrit dans le texte de retour (rendu visible par défilement) et dans une boîte de dialogue.
+    private void ShowDiagnosticResult(string message, bool success)
+    {
+        if (isClosed) return;
+        ProfileExportFeedbackText.Text = message;
+        ProfileExportFeedbackText.BringIntoView();
+        MessageBox.Show(this, message, "InputOS", MessageBoxButton.OK, success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+    }
+
     private async void SendDiagnosticButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PendingConfiguration?.Buttons == null) return;
         var draft = PendingConfiguration;
+        if (draft?.Buttons == null || draft.Detection == null || draft.Joysticks == null)
+        {
+            ShowDiagnosticResult(Tr("Envoi impossible : terminez la configuration (axes et boutons) avant d’envoyer le diagnostic."), false);
+            return;
+        }
+        string json;
+        try { json = ControllerProfileExportService.CreateJson(draft, false); }
+        catch (Exception)
+        {
+            ShowDiagnosticResult(Tr("Envoi impossible : le profil n’a pas pu être préparé. Refaites la configuration."), false);
+            return;
+        }
+        if (sentDiagnostic == json)
+        {
+            ShowDiagnosticResult(Tr("Ce diagnostic a déjà été envoyé aux développeurs."), true);
+            return;
+        }
+        // Même contenu que l'envoi, seulement indenté pour la lecture.
+        var preview = new DiagnosticPreviewWindow(ControllerProfileExportService.CreateJson(draft)) { Owner = this };
+        if (preview.ShowDialog() != true) return;
+
         SendDiagnosticButton.IsEnabled = false;
         ProfileExportFeedbackText.Text = Tr("Envoi du diagnostic en cours…");
+        ProfileExportFeedbackText.BringIntoView();
         try
         {
-            string json = ControllerProfileExportService.CreateJson(draft, false);
-            if (sentDiagnostic == json)
-            {
-                ProfileExportFeedbackText.Text = Tr("Ce diagnostic a déjà été envoyé aux développeurs.");
-                return;
-            }
             int issueNumber = await ControllerDiagnosticService.SendAsync(draft, diagnosticCancellation.Token);
             sentDiagnostic = json;
-            if (!isClosed && ReferenceEquals(draft, PendingConfiguration))
-                ProfileExportFeedbackText.Text = Tf("Diagnostic envoyé aux développeurs. Référence GitHub : #{0}. Merci pour votre contribution !", issueNumber);
+            ShowDiagnosticResult(Tf("Diagnostic envoyé aux développeurs. Référence GitHub : #{0}. Merci pour votre contribution !", issueNumber), true);
         }
         catch (InvalidOperationException exception)
         {
-            if (!isClosed) ProfileExportFeedbackText.Text = exception.Message;
+            ShowDiagnosticResult(exception.Message, false);
         }
         catch (OperationCanceledException)
         {
-            if (!isClosed) ProfileExportFeedbackText.Text = Tr("L’envoi n’a pas été confirmé dans le délai prévu. Réessayez plus tard : un diagnostic identique ne créera pas une nouvelle issue.");
+            ShowDiagnosticResult(Tr("L’envoi n’a pas été confirmé dans le délai prévu. Réessayez plus tard : un diagnostic identique ne créera pas une nouvelle issue."), false);
         }
         catch (Exception)
         {
-            if (!isClosed) ProfileExportFeedbackText.Text = Tr("Impossible d’envoyer le diagnostic. Vérifiez votre connexion Internet et réessayez. Vous pouvez enregistrer votre profil localement.");
+            ShowDiagnosticResult(Tr("Impossible d’envoyer le diagnostic. Vérifiez votre connexion Internet et réessayez. Vous pouvez enregistrer votre profil localement."), false);
         }
         finally
         {
