@@ -5,7 +5,7 @@ using Windows.Gaming.Input;
 
 namespace InputOS.Services;
 
-public sealed class NintendoProControllerReader : IDisposable
+public sealed class NintendoProControllerReader : IControllerInputReader
 {
     // ============================================================================
     // FONCTIONNALITÉ : LECTURE NATIVE SWITCH PRO USB (HAC-013)
@@ -17,6 +17,10 @@ public sealed class NintendoProControllerReader : IDisposable
     private long lastReport;
     public ControllerDetectionResult? Reading => Environment.TickCount64 - Interlocked.Read(ref lastReport) < 250
         ? Volatile.Read(ref latest) : null;
+
+    public string InputReadingFormat => ReadingFormat;
+    public bool IsFresh => Reading != null;
+    public ControllerDetectionResult? Read() => Reading;
 
     public static bool IsSupported(RawGameController controller) => !controller.IsWireless &&
         controller.HardwareVendorId == 0x057E && controller.HardwareProductId == 0x2009;

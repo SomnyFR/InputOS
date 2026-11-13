@@ -82,6 +82,9 @@ public partial class OtherControllerWindow : Window
     private readonly int buttonCount, axisCount, switchCount;
     private readonly List<InputRow> rows = [];
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    // Lecteur choisi par ControllerReaderFactory (lecture Windows brute pour tout matériel inconnu).
+    private IControllerInputReader reader;
+    private long readerStartedAt = Environment.TickCount64;
 
     private readonly bool[] buttons;
     private readonly GameControllerSwitchPosition[] switches;
@@ -105,6 +108,7 @@ public partial class OtherControllerWindow : Window
         buttonCount = controller.ButtonCount;
         axisCount = controller.AxisCount;
         switchCount = controller.SwitchCount;
+        reader = ControllerReaderFactory.Create(controller, out string? readerWarning);
         buttons = new bool[buttonCount];
         switches = new GameControllerSwitchPosition[switchCount];
         axes = new double[axisCount];
@@ -132,7 +136,8 @@ public partial class OtherControllerWindow : Window
 
         timer.Tick += Timer_Tick;
         timer.Start();
-        Closed += (_, _) => timer.Stop();
+        if (readerWarning != null) ShowMessage(readerWarning);
+        Closed += (_, _) => { timer.Stop(); reader.Dispose(); };
     }
 
     // Retire les caractères que le service de diagnostics refuse.
@@ -276,7 +281,19 @@ public partial class OtherControllerWindow : Window
         try
         {
             if (!RawGameController.RawGameControllers.Contains(controller)) throw new InvalidOperationException();
-            controller.GetCurrentReading(buttons, switches, axes);
+            if (reader.Read() is not { } reading)
+            {
+                if (Environment.TickCount64 - readerStartedAt < 4500) return;
+                // Lecteur spécifique muet : repli sur la lecture Windows brute, signalé à l'utilisateur.
+                reader.Dispose();
+                reader = ControllerReaderFactory.CreateRaw(controller);
+                ShowMessage(ControllerReaderFactory.FallbackMessage);
+                return;
+            }
+            Array.Copy(reading.ButtonStates, buttons, Math.Min(reading.ButtonStates.Length, buttons.Length));
+            Array.Copy(reading.AxisValues, axes, Math.Min(reading.AxisValues.Length, axes.Length));
+            for (int i = 0; i < switches.Length && i < reading.SwitchPositions.Length; i++)
+                switches[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
         }
         catch (Exception)
         {
@@ -450,7 +467,8 @@ public partial class OtherControllerWindow : Window
         string[] unavailable = visible.Where(r => r.IsAbsent).Select(r => r.Label).ToArray();
 
         ControllerDetectionResult detection = new(name, controller.HardwareVendorId, controller.HardwareProductId, wireless, false,
-            new string[buttonCount], new bool[buttonCount], new double[axisCount], new string[switchCount]);
+            new string[buttonCount], new bool[buttonCount], new double[axisCount], new string[switchCount])
+            { InputReadingFormat = reader.InputReadingFormat };
         ControllerConfigurationDraft draft = new(name, controller.HardwareVendorId, controller.HardwareProductId)
         {
             Connection = connection,

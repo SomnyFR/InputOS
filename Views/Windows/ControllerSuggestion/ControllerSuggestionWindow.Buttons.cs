@@ -9,7 +9,6 @@ namespace InputOS;
 
 public partial class ControllerSuggestionWindow
 {
-    private DualSenseMicrophoneReader? microphoneReader;
     private readonly HashSet<string> livePressedButtons = new();
     private Dictionary<string, Action<bool>>? imageHighlighters;
     // ============================================================================
@@ -46,7 +45,15 @@ public partial class ControllerSuggestionWindow
         if (PendingConfiguration?.Joysticks == null || !EnsureControllerConnected()) return;
         try
         {
-            ControllerDetectionResult rest = ControllerAutoDetectionService.Detect(SelectedController);
+            // Même source d'entrées que le reste du parcours (lecteur choisi à la détection).
+            ControllerDetectionResult rest = inputReader?.Read() ??
+                throw new InvalidOperationException(Tr("Lecture interrompue."));
+            rest = rest with
+            {
+                ButtonStates = (bool[])rest.ButtonStates.Clone(),
+                AxisValues = (double[])rest.AxisValues.Clone(),
+                SwitchPositions = (string[])rest.SwitchPositions.Clone()
+            };
             var sticks = PendingConfiguration.Joysticks;
             if (rest.ButtonStates.Any(value => value) || rest.SwitchPositions.Any(value => value != "Center") ||
                 sticks.StickAxes()
@@ -60,8 +67,6 @@ public partial class ControllerSuggestionWindow
             ProfileExportFeedbackText.Text = Tr("L’envoi se fait directement depuis InputOS. Le profil local et l’envoi du diagnostic sont indépendants.");
             livePressedButtons.Clear();
             buttonTest = new ControllerButtonConfigurationService(PendingConfiguration.Name, rest.AxisValues, sticks);
-            microphoneReader?.Dispose();
-            microphoneReader = new DualSenseMicrophoneReader(SelectedController);
             buttonSamples.Clear();
             BeginButtonTestButton.Visibility = Visibility.Collapsed;
             ButtonTestActions.Visibility = Visibility.Visible;
@@ -78,7 +83,6 @@ public partial class ControllerSuggestionWindow
 
     private void UpdateButtonTestReading(ControllerDetectionResult reading)
     {
-        reading = reading with { MicrophonePressed = microphoneReader?.Pressed };
         if (buttonTest == null)
         {
             UpdateButtonPreview(reading);
@@ -156,8 +160,6 @@ public partial class ControllerSuggestionWindow
     private void StartButtonPreview()
     {
         ProfileExportPanel.Visibility = Visibility.Visible;
-        microphoneReader?.Dispose();
-        microphoneReader = new DualSenseMicrophoneReader(SelectedController);
         ButtonInstructionText.Text = Tr("Test en direct · Appuyez sur les commandes de votre manette.");
         ButtonTestFeedbackText.Text = Tr("Les commandes associées s’allument pendant l’appui. Les associations restent temporaires jusqu’à la fin de la configuration.");
         liveInputTimer.Start();
@@ -220,8 +222,6 @@ public partial class ControllerSuggestionWindow
     {
         ProfileExportPanel.Visibility = Visibility.Collapsed;
         livePressedButtons.Clear();
-        microphoneReader?.Dispose();
-        microphoneReader = null;
         buttonTest = null;
         buttonSamples.Clear();
         ButtonTestActions.Visibility = Visibility.Collapsed;

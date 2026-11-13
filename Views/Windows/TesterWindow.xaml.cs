@@ -22,9 +22,9 @@ public partial class TesterWindow : Window
 
     private readonly RawGameController controller;
     private readonly ControllerLocalProfile? inputProfile;
-    private readonly DualSenseMicrophoneReader? localMicrophone;
-    private readonly NintendoProControllerReader? nintendoReader;
-    private readonly long nintendoStartedAt = Environment.TickCount64;
+    private readonly IControllerInputReader reader;
+    private bool? microphonePressed;
+    private readonly long readerStartedAt = Environment.TickCount64;
 
     private readonly DispatcherTimer inputTimer;
 
@@ -53,9 +53,11 @@ public partial class TesterWindow : Window
         controller = selectedController;
         inputProfile = DualSenseProfileService.Load(controller) ?? XboxSeriesProfileService.Load(controller)
             ?? ControllerLocalProfileService.Load(controller);
-        if (inputProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
-        if (inputProfile != null && NintendoProControllerReader.IsSupported(controller))
-            nintendoReader = new NintendoProControllerReader(controller);
+        // Lecteur choisi par modèle et connexion (profil connu), sinon lecture Windows brute.
+        // Un échec du lecteur spécifique retombe sur la lecture brute (avertissement dans le titre).
+        string? readerWarning = null;
+        reader = inputProfile != null ? ControllerReaderFactory.Create(controller, out readerWarning)
+            : ControllerReaderFactory.CreateRaw(controller);
 
 
         buttonValues =
@@ -71,6 +73,7 @@ public partial class TesterWindow : Window
 
 
         InitializeControllerInformation();
+        if (readerWarning != null) Title += " - " + readerWarning;
 
         CreateButtonIndicators();
 
@@ -313,32 +316,30 @@ public partial class TesterWindow : Window
 
         try
         {
-            if (nintendoReader != null)
+            if (reader.Read() is not { } reading)
             {
-                if (nintendoReader.Reading is not { } reading)
-                {
-                    Array.Clear(buttonValues);
-                    Array.Fill(switchValues, GameControllerSwitchPosition.Center);
-                    UpdateButtons();
-                    CenterStickPoints();
-                    if (Environment.TickCount64 - nintendoStartedAt < 4500) return;
-                    inputTimer.Stop();
-                    Title = Tr("InputOS - Lecture Nintendo indisponible : rebranchez la manette en USB");
-                    return;
-                }
-                Array.Copy(reading.ButtonStates, buttonValues, buttonValues.Length);
-                Array.Copy(reading.AxisValues, axisValues, axisValues.Length);
-                for (int i = 0; i < switchValues.Length; i++)
-                    switchValues[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+                // Lecture périmée : jamais présentée comme actuelle. Le profil Nintendo HID ne vaut pas pour
+                // les entrées Windows brutes, donc pas de repli ici : message et arrêt.
+                Array.Clear(buttonValues);
+                Array.Fill(switchValues, GameControllerSwitchPosition.Center);
+                microphonePressed = null;
+                UpdateButtons();
+                CenterStickPoints();
+                if (Environment.TickCount64 - readerStartedAt < 4500) return;
+                inputTimer.Stop();
+                Title = Tr("InputOS - Lecture Nintendo indisponible : rebranchez la manette en USB");
+                return;
             }
-            else
-            {
-                controller.GetCurrentReading(buttonValues, switchValues, axisValues);
-            }
+            Array.Copy(reading.ButtonStates, buttonValues, Math.Min(reading.ButtonStates.Length, buttonValues.Length));
+            Array.Copy(reading.AxisValues, axisValues, Math.Min(reading.AxisValues.Length, axisValues.Length));
+            for (int i = 0; i < switchValues.Length && i < reading.SwitchPositions.Length; i++)
+                switchValues[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+            microphonePressed = reading.MicrophonePressed;
 
             // En Bluetooth, le rapport HID complet fournit les commandes supplémentaires
             // et un ordre d'axes indépendant du mode de rapport Windows.
-            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless && localMicrophone?.Reading is { } hid)
+            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless &&
+                (reader as DualSenseControllerReader)?.HidReading is { } hid)
             {
                 Array.Copy(hid.ButtonStates, buttonValues, Math.Min(hid.ButtonStates.Length, buttonValues.Length));
                 Array.Copy(hid.AxisValues, axisValues, axisValues.Length);
@@ -432,7 +433,7 @@ public partial class TesterWindow : Window
         var reading = inputProfile == null ? null : new ControllerDetectionResult(inputProfile.Model,
             inputProfile.VendorId, inputProfile.ProductId, false, false, Array.Empty<string>(),
             buttonValues, axisValues, switchValues.Select(value => value.ToString()).ToArray())
-            { MicrophonePressed = localMicrophone?.Pressed };
+            { MicrophonePressed = microphonePressed };
         for (int i = 0; i < buttonIndicators.Count; i++)
         {
             bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(inputProfile!.Buttons.Mappings[i], reading);
@@ -913,8 +914,7 @@ public partial class TesterWindow : Window
         object? sender,
         EventArgs e)
     {
-        localMicrophone?.Dispose();
-        nintendoReader?.Dispose();
+        reader.Dispose();
         inputTimer.Stop();
 
         inputTimer.Tick -=

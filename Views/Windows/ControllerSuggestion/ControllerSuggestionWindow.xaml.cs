@@ -63,7 +63,9 @@ public partial class ControllerSuggestionWindow : Window
     private System.Threading.CancellationTokenSource? detectionCancellation;
 
     private bool isClosed;
-    private NintendoProControllerReader? nintendoReader;
+    // Lecteur choisi par ControllerReaderFactory, commun à toutes les étapes du parcours.
+    private IControllerInputReader? inputReader;
+    private string? readerWarning;
 
     private ControllerButtonConfigurationService? buttonTest;
     private ControllerButtonDefinition[] buttonDefinitions = Array.Empty<ControllerButtonDefinition>();
@@ -344,29 +346,12 @@ public partial class ControllerSuggestionWindow : Window
             }
 
 
-            GameControllerSwitchPosition[] switches =
-                new GameControllerSwitchPosition[result.SwitchPositions.Length];
-
-
-            if (nintendoReader != null)
-            {
-                var reading = nintendoReader.Reading ?? throw new InvalidOperationException(Tr("Lecture Nintendo interrompue."));
-                Array.Copy(reading.ButtonStates, result.ButtonStates, result.ButtonStates.Length);
-                Array.Copy(reading.AxisValues, result.AxisValues, result.AxisValues.Length);
-                for (int i = 0; i < switches.Length; i++)
-                    switches[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
-            }
-            else
-            {
-                SelectedController.GetCurrentReading(result.ButtonStates, switches, result.AxisValues);
-            }
-
-
-            for (int i = 0; i < switches.Length; i++)
-            {
-                result.SwitchPositions[i] =
-                    switches[i].ToString();
-            }
+            // Une lecture périmée n'est jamais présentée comme actuelle : elle interrompt la lecture.
+            ControllerDetectionResult reading = inputReader?.Read() ??
+                throw new InvalidOperationException(Tr("Lecture interrompue."));
+            Array.Copy(reading.ButtonStates, result.ButtonStates, Math.Min(reading.ButtonStates.Length, result.ButtonStates.Length));
+            Array.Copy(reading.AxisValues, result.AxisValues, Math.Min(reading.AxisValues.Length, result.AxisValues.Length));
+            Array.Copy(reading.SwitchPositions, result.SwitchPositions, Math.Min(reading.SwitchPositions.Length, result.SwitchPositions.Length));
 
 
             if (joystickTest != null)
@@ -385,7 +370,7 @@ public partial class ControllerSuggestionWindow : Window
 
             if (ButtonConfigurationPanel.Visibility == Visibility.Visible)
             {
-                UpdateButtonTestReading(result);
+                UpdateButtonTestReading(result with { MicrophonePressed = reading.MicrophonePressed });
             }
             else if (JoystickConfigurationPanel.Visibility == Visibility.Visible)
             {
@@ -446,7 +431,8 @@ public partial class ControllerSuggestionWindow : Window
             Tf("Lecture en direct · {0} boutons · {1} axes\n", result.ButtonLabels.Length, result.AxisValues.Length) +
             (result.HasStandardGamepad
                 ? Tr("Commandes standard reconnues par Windows.")
-                : Tr("Certaines commandes devront être identifiées manuellement."));
+                : Tr("Certaines commandes devront être identifiées manuellement.")) +
+            (readerWarning == null ? "" : "\n" + readerWarning);
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -553,24 +539,34 @@ public partial class ControllerSuggestionWindow : Window
 
         try
         {
-            if (nintendoReader != null) await nintendoReader.StopAsync();
+            await StopInputReaderAsync();
             token.ThrowIfCancellationRequested();
-            nintendoReader = NintendoProControllerReader.IsSupported(SelectedController)
-                ? new NintendoProControllerReader(SelectedController) : null;
-            NintendoProControllerReader? reader = nintendoReader;
-            Task<ControllerDetectionResult> detection = Task.Run(
-                () => reader != null ? reader.WaitForReading(token)
-                    : ControllerAutoDetectionService.Detect(SelectedController), token);
+            // Lecteur choisi selon le modèle et la connexion ; repli sur la lecture Windows brute avec avertissement.
+            Task<(IControllerInputReader Reader, ControllerDetectionResult First, string? Warning)> detection = Task.Run(
+                () => ControllerReaderFactory.Open(SelectedController, token), token);
 
-            await Task.WhenAll(detection, Task.Delay(450, token));
+            try
+            {
+                await Task.WhenAll(detection, Task.Delay(450, token));
+            }
+            catch
+            {
+                // Annulation ou échec : ne jamais laisser un lecteur ouvert sans propriétaire.
+                if (detection.IsCompletedSuccessfully) detection.Result.Reader.Dispose();
+                throw;
+            }
             token.ThrowIfCancellationRequested();
 
+            var opened = await detection;
             if (isClosed || PendingConfiguration == null || !EnsureControllerConnected())
             {
+                opened.Reader.Dispose();
                 return;
             }
 
-            ControllerDetectionResult result = await detection;
+            inputReader = opened.Reader;
+            readerWarning = opened.Warning;
+            ControllerDetectionResult result = opened.First;
 
 
             PendingConfiguration =
@@ -590,8 +586,7 @@ public partial class ControllerSuggestionWindow : Window
         }
         catch (Exception)
         {
-            if (nintendoReader != null) await nintendoReader.StopAsync();
-            nintendoReader = null;
+            await StopInputReaderAsync();
             if (!isClosed)
             {
                 if (PendingConfiguration != null)
@@ -627,6 +622,15 @@ public partial class ControllerSuggestionWindow : Window
     // ============================================================================
     // FONCTIONNALITÉ : MANETTE CONNECTÉE REQUISE
     // ============================================================================
+
+    // Libère le lecteur en attendant la fermeture du flux HID Nintendo avant une nouvelle ouverture.
+    private async Task StopInputReaderAsync()
+    {
+        IControllerInputReader? reader = inputReader;
+        inputReader = null;
+        if (reader is NintendoProControllerReader nintendo) await nintendo.StopAsync();
+        else reader?.Dispose();
+    }
 
     private bool EnsureControllerConnected()
     {
@@ -685,7 +689,8 @@ public partial class ControllerSuggestionWindow : Window
         System.EventArgs e)
     {
         isClosed = true;
-        nintendoReader?.Dispose();
+        inputReader?.Dispose();
+        inputReader = null;
         diagnosticCancellation.Cancel();
         detectionCancellation?.Cancel();
 

@@ -42,8 +42,6 @@ public static class ControllerAutoDetectionService
     public static ControllerDetectionResult Detect(
         RawGameController controller)
     {
-        if (NintendoProControllerReader.IsSupported(controller))
-            throw new InvalidOperationException(Tr("Cette Switch Pro nécessite une lecture HID Nintendo."));
         if (!RawGameController.RawGameControllers.Contains(controller))
         {
             throw new InvalidOperationException(Tr("La manette est déconnectée."));
