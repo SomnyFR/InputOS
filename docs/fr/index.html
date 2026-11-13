@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InputOS — détecter et tester vos manettes</title>
+<meta name="description" content="InputOS est une application Windows qui détecte, identifie et teste vos manettes.">
+<link rel="icon" href="../assets/iOSWhite.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="#"><img src="../assets/iOSWhite.png" alt="">InputOS</a>
+  <nav>
+    <a href="#manettes">Manettes</a>
+    <a href="#suggerer">Suggérer</a>
+    <a href="#confidentialite">Confidentialité</a>
+    <a class="lang fr" href="../" aria-label="English">
+      <span class="off"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#012169"/><path d="M0 0l60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0l60 40M60 0L0 40" stroke="#C8102E" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="13"/><path d="M30 0v40M0 20h60" stroke="#C8102E" stroke-width="8"/></svg></span>
+      <span class="on"><svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg></span>
+    </a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Détectez, identifiez et testez vos manettes</h1>
+    <p>InputOS est une application Windows (10 et 11, 64 bits) avec un testeur en direct, des profils officiels et des mises à jour automatiques.</p>
+    <a class="btn" href="https://github.com/SomnyFR/InputOS/releases/latest/download/InputOS-win-Setup.exe">Télécharger InputOS pour Windows</a>
+    <p class="note" style="margin-top:12px">Fichier <code>InputOS-win-Setup.exe</code> · <a href="https://github.com/SomnyFR/InputOS/releases/latest">Toutes les versions</a></p>
+    <div class="imgs">
+      <img src="../assets/ps4-controller.png" alt="Manette PlayStation" loading="lazy">
+      <img src="../assets/xbox-controller.png" alt="Manette Xbox" loading="lazy">
+    </div>
+  </div>
+
+  <section id="manettes">
+    <h2>Manettes compatibles</h2>
+    <p>Ces manettes ont un profil officiel :</p>
+    <ul>
+      <li>DualShock 4</li>
+      <li>DualSense (USB et Bluetooth)</li>
+      <li>DualSense Edge</li>
+      <li>Xbox Elite Series 2</li>
+      <li>Xbox Series S/X (USB uniquement ; les boutons Guide et Share ne sont pas disponibles)</li>
+    </ul>
+    <p class="note">La compatibilité peut varier selon le modèle exact et la révision matérielle. Les autres manettes vues par Windows peuvent être configurées avec « Suggérer la manette », en USB. La Nintendo Switch Pro est en développement et n'est pas prise en charge.</p>
+  </section>
+
+  <section id="suggerer">
+    <h2>Suggérer une manette</h2>
+    <p>Votre manette n'a pas de profil officiel ? InputOS affiche un avertissement et un bouton <strong>Suggérer la manette</strong>.</p>
+    <ol>
+      <li>Branchez la manette en USB et ouvrez InputOS.</li>
+      <li>Cliquez sur « Suggérer la manette » et choisissez un modèle.</li>
+      <li>Suivez le parcours : calibration des sticks, puis appui sur chaque commande.</li>
+      <li>Enregistrez le profil : vous pouvez tester la manette en local en attendant un profil officiel.</li>
+      <li>Si vous le souhaitez, cliquez sur « Envoyer le diagnostic » pour le transmettre aux développeurs.</li>
+    </ol>
+    <p class="note">L'envoi est toujours volontaire. Il crée une issue GitHub <strong>publique</strong>.</p>
+  </section>
+
+  <section id="confidentialite">
+    <h2>Confidentialité</h2>
+    <p>InputOS n'envoie rien tant que vous ne cliquez pas sur « Envoyer le diagnostic ». Les profils enregistrés restent sur votre PC, dans <code>Documents\InputOS\profils</code>.</p>
+    <div class="card">
+      <strong>Contenu d'un diagnostic :</strong> modèle choisi, identifiants VID/PID, type de connexion, nombre de boutons/axes, calibration et association des commandes.
+    </div>
+    <div class="card">
+      <strong>Jamais envoyés :</strong> nom de compte Windows, nom du périphérique donné par Windows, chemin du périphérique, identifiant privé.
+    </div>
+    <p>Le diagnostic est transmis en HTTPS à un service Cloudflare qui crée une issue publique sur <a href="https://github.com/SomnyFR/InputOS/issues">GitHub</a> : toute personne peut la lire.</p>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <a href="https://github.com/SomnyFR/InputOS">Code source sur GitHub</a> · <a href="https://github.com/SomnyFR/InputOS/releases/latest">Dernière version</a>
+</div></footer>
+<script>document.querySelector(".lang").addEventListener("click",function(e){var a=this;if(a.classList.contains("go"))return;e.preventDefault();a.classList.add("go");setTimeout(function(){location.href=a.href},320)})</script>
+</body>
+</html>

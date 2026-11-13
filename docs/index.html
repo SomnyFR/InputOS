@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InputOS — detect and test your controllers</title>
+<meta name="description" content="InputOS is a Windows application that detects, identifies and tests your controllers.">
+<link rel="icon" href="assets/iOSWhite.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="#"><img src="assets/iOSWhite.png" alt="">InputOS</a>
+  <nav>
+    <a href="#controllers">Controllers</a>
+    <a href="#suggest">Suggest</a>
+    <a href="#privacy">Privacy</a>
+    <a class="lang" href="fr/" aria-label="Français">
+      <span class="on"><svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#012169"/><path d="M0 0l60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0l60 40M60 0L0 40" stroke="#C8102E" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="13"/><path d="M30 0v40M0 20h60" stroke="#C8102E" stroke-width="8"/></svg></span>
+      <span class="off"><svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg></span>
+    </a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Detect, identify and test your controllers</h1>
+    <p>InputOS is a Windows application (10 and 11, 64-bit) with a live tester, official profiles and automatic updates.</p>
+    <a class="btn" href="https://github.com/SomnyFR/InputOS/releases/latest/download/InputOS-win-Setup.exe">Download InputOS for Windows</a>
+    <p class="note" style="margin-top:12px">File <code>InputOS-win-Setup.exe</code> · <a href="https://github.com/SomnyFR/InputOS/releases/latest">All versions</a></p>
+    <div class="imgs">
+      <img src="assets/ps4-controller.png" alt="PlayStation controller" loading="lazy">
+      <img src="assets/xbox-controller.png" alt="Xbox controller" loading="lazy">
+    </div>
+  </div>
+
+  <section id="controllers">
+    <h2>Compatible controllers</h2>
+    <p>These controllers have an official profile:</p>
+    <ul>
+      <li>DualShock 4</li>
+      <li>DualSense (USB and Bluetooth)</li>
+      <li>DualSense Edge</li>
+      <li>Xbox Elite Series 2</li>
+      <li>Xbox Series S/X (USB only; Guide and Share are not available)</li>
+    </ul>
+    <p class="note">Compatibility may vary with the exact model and hardware revision. Other controllers seen by Windows can be set up with “Suggest Controller”, over USB. The Nintendo Switch Pro is under development and is not supported.</p>
+  </section>
+
+  <section id="suggest">
+    <h2>Suggest a controller</h2>
+    <p>No official profile for your controller? InputOS shows a warning and a <strong>Suggest Controller</strong> button.</p>
+    <ol>
+      <li>Plug the controller in over USB and open InputOS.</li>
+      <li>Click “Suggest Controller” and pick a model.</li>
+      <li>Follow the steps: stick calibration, then press each control.</li>
+      <li>Save the profile: you can test the controller locally while waiting for an official profile.</li>
+      <li>If you wish, click “Send Diagnostic” to send it to the developers.</li>
+    </ol>
+    <p class="note">Sending is always optional. It creates a <strong>public</strong> GitHub issue.</p>
+  </section>
+
+  <section id="privacy">
+    <h2>Privacy</h2>
+    <p>InputOS sends nothing until you click “Send Diagnostic”. Saved profiles stay on your PC, in <code>Documents\InputOS\profils</code>.</p>
+    <div class="card">
+      <strong>A diagnostic contains:</strong> the selected model, VID/PID identifiers, connection type, button/axis counts, calibration and control mapping.
+    </div>
+    <div class="card">
+      <strong>Never sent:</strong> your Windows account name, the device name given by Windows, the device path, any private identifier.
+    </div>
+    <p>The diagnostic is sent over HTTPS to a Cloudflare service that creates a public issue on <a href="https://github.com/SomnyFR/InputOS/issues">GitHub</a>: anyone can read it.</p>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <a href="https://github.com/SomnyFR/InputOS">Source code on GitHub</a> · <a href="https://github.com/SomnyFR/InputOS/releases/latest">Latest release</a>
+</div></footer>
+<script>document.querySelector(".lang").addEventListener("click",function(e){var a=this;if(a.classList.contains("go"))return;e.preventDefault();a.classList.add("go");setTimeout(function(){location.href=a.href},320)})</script>
+</body>
+</html>
