@@ -107,6 +107,23 @@ public partial class ControllerSuggestionWindow : Window
     }
 
 
+    // Voie « Autre » : configuration libre dans sa propre fenêtre ; la voie par manette ci-dessous reste inchangée.
+    private void OtherHardwareButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (!EnsureControllerConnected())
+        {
+            return;
+        }
+
+        if (new OtherControllerWindow(SelectedController) { Owner = this }.ShowDialog() == true)
+        {
+            Close();
+        }
+    }
+
+
     private void ControllerModelComboBox_SelectionChanged(
         object sender,
         SelectionChangedEventArgs e)

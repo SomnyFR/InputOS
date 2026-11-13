@@ -13,6 +13,12 @@ public static class ControllerLocalProfileService
     public const int MaxButtons = 128, MaxAxes = 32, MaxSwitches = 8;
     private static readonly string[] AxisTypes = ["Stick", "Trigger", "Throttle", "Slider", "Dial"];
 
+    public static readonly string[] ControllerTypes = ["Gamepad", "ArcadeStick", "Wheel", "Joystick", "RadioController", "Other"];
+
+    // Le service de diagnostics refuse ces caractères et les noms de plus de 100 caractères.
+    public static bool IsValidName(string? name) =>
+        !string.IsNullOrWhiteSpace(name) && name.Length <= 100 && name.IndexOfAny(['`', '\uFF20', '<', '>', '\r', '\n']) < 0;
+
     // Connexion réelle d'après Windows. shortcut: RawGameController n'expose pas le transport ;
     // un récepteur 2,4 GHz n'est reconnu que par son nom, sinon une manette sans fil est « Bluetooth ».
     public static string GetConnection(RawGameController controller)
@@ -70,7 +76,7 @@ public static class ControllerLocalProfileService
         if (!(v1 || p.SchemaVersion == 2) || p.ProfileType != "UserConfiguration" || p.ValidatedByInputOS ||
             string.IsNullOrWhiteSpace(p.Model) || p.Model.Length > 100 ||
             p.Connection != connection || p.Connection is not ("USB" or "Bluetooth" or "Wireless") ||
-            string.IsNullOrWhiteSpace(p.ControllerType) || p.ControllerType.Length > 32 ||
+            !ControllerTypes.Contains(p.ControllerType) ||
             p.VendorId != vendor || p.ProductId != product || p.ButtonCount != buttons ||
             p.AxisCount != axes || p.SwitchCount != switches || p.Joysticks == null ||
             buttons < 0 || buttons > MaxButtons || axes < 0 || axes > MaxAxes || switches < 0 || switches > MaxSwitches ||
@@ -86,6 +92,7 @@ public static class ControllerLocalProfileService
         if (all.Length > axes || all.Any(a => a == null || a.AxisIndex < 0 || a.AxisIndex >= axes ||
             !Unit(a.Center) || !Unit(a.PositiveEnd) || !Unit(a.NegativeEnd) || !AxisTypes.Contains(a.Type) ||
             Math.Abs(a.PositiveEnd - a.Center) <= .01 ||
+            (a.Name != null && !IsValidName(a.Name)) || !double.IsFinite(a.Deadzone) || a.Deadzone < 0 || a.Deadzone > .5 ||
             (a.Type == "Stick" ? (a.PositiveEnd - a.Center) * (a.NegativeEnd - a.Center) >= 0 : a.PositiveEnd == a.NegativeEnd)) ||
             all.Select(a => a.AxisIndex).Distinct().Count() != all.Length ||
             j.StickAxes().Any(a => a.Type != "Stick") || j.Axes.Any(a => a.Type == "Stick")) return false;

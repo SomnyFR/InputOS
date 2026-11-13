@@ -74,6 +74,8 @@ public partial class TesterWindow : Window
 
         CreateButtonIndicators();
 
+        CreateNamedAxes();
+
 
         inputTimer = new DispatcherTimer
         {
@@ -350,6 +352,8 @@ public partial class TesterWindow : Window
             UpdateSticks();
 
             UpdateDPad();
+
+            UpdateNamedAxes();
         }
         catch
         {
@@ -381,6 +385,47 @@ public partial class TesterWindow : Window
     // ---------------------------------------------------------------------------
     // LOGIQUE
     // ---------------------------------------------------------------------------
+
+    // Profils « Autre » : les axes nommés s'affichent en liste, et le schéma de manette est masqué hors type « Gamepad ».
+    private readonly List<(JoystickAxisConfiguration Axis, System.Windows.Controls.ProgressBar Bar, TextBlock Value)> namedAxes = [];
+
+    private void CreateNamedAxes()
+    {
+        if (inputProfile == null) return;
+        if (inputProfile.ControllerType != "Gamepad")
+        {
+            SticksCard.Visibility = Visibility.Collapsed;
+            AxesDPadGrid.Visibility = Visibility.Collapsed;
+        }
+        foreach (var axis in inputProfile.Joysticks.AllAxes().Where(a => a.Name != null).OrderBy(a => a.AxisIndex))
+        {
+            var bar = new System.Windows.Controls.ProgressBar { Minimum = -1, Maximum = 1, Height = 10, Margin = new Thickness(0, 0, 12, 0) };
+            var value = new TextBlock { Width = 60, TextAlignment = TextAlignment.Right };
+            var line = new Grid { Margin = new Thickness(0, 4, 0, 4) };
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+            line.ColumnDefinitions.Add(new ColumnDefinition());
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var label = new TextBlock { Text = axis.Name };
+            Grid.SetColumn(bar, 1);
+            Grid.SetColumn(value, 2);
+            line.Children.Add(label);
+            line.Children.Add(bar);
+            line.Children.Add(value);
+            NamedAxesPanel.Children.Add(line);
+            namedAxes.Add((axis, bar, value));
+        }
+        if (namedAxes.Count > 0) NamedAxesCard.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateNamedAxes()
+    {
+        foreach (var (axis, bar, value) in namedAxes)
+        {
+            double v = axis.AxisIndex < axisValues.Length ? axis.Normalize(axisValues[axis.AxisIndex]) : 0;
+            bar.Value = v;
+            value.Text = v.ToString("0.000");
+        }
+    }
 
     private void UpdateButtons()
     {
