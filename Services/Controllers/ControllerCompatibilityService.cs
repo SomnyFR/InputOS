@@ -31,8 +31,7 @@ public static class ControllerCompatibilityService
             [(SonyVendorId, 0x09CC)] = "DualShock 4",
             [(SonyVendorId, 0x0CE6)] = "DualSense",
             [(SonyVendorId, 0x0DF2)] = "DualSense Edge",
-            // TEST « Suggérer » : Xbox Elite Series 2 désactivée temporairement, à rétablir ensuite.
-            // [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2",
+            [(MicrosoftVendorId, 0x0B22)] = "Xbox Elite Series 2",
             [(MicrosoftVendorId, 0x0B12)] = "Xbox Series S/X"
         };
 

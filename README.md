@@ -1,6 +1,6 @@
 # InputOS
 
-Current version: **v1.2.0**.
+Current version: **v1.2.1**.
 
 ## Organisation du projet
 
@@ -11,12 +11,9 @@ Current version: **v1.2.0**.
 - `Services/Settings/` et `Services/Updates/` : paramètres et mises à jour.
 - `Config/` : configuration du service de diagnostic.
 - `Assets/` : icônes et images.
+- `Themes/` : styles de l’interface (menus déroulants, cases à cocher).
+- `Languages/` : traductions de l’interface.
 - `Properties/` : informations d’assembly et imports communs.
-- `Cloudflare/` : service de réception des diagnostics et guide d’installation.
-- `Packaging/` : scripts pour créer les versions et le setup de migration.
-- `Packaging/Legacy/` : ancien script de la v1, conservé comme référence.
-- `Releases/<version>/` : setups et paquets générés, exclus de Git.
-- `bin/` et `obj/` : fichiers de compilation ; l’ancienne publication est archivée dans `obj/LegacyPublish/`.
 
 Les points d’entrée `App.xaml` et `Program.cs` restent à la racine avec `InputOS.csproj`.
 Le fichier `Config/diagnostic-settings.json` est copié à côté de l’exécutable sous le nom `diagnostic-settings.json`.
@@ -44,7 +41,10 @@ The project aims to provide a simple interface for checking controller inputs an
 
 - Other controllers detected by Windows can be configured through the guided controller suggestion workflow.
 - Xbox One / Series controller detection does not guarantee a validated profile for every model.
-- A compatible local profile enables testing over USB while official support is pending.
+- A compatible local profile enables testing while official support is pending, over the connection it was configured with (USB, Bluetooth, or wireless).
+- Hardware that is not a game controller (arcade stick, wheel, joystick, RC transmitter or drone controller) can be described with the free configuration mode.
+
+The Nintendo Switch Pro controller is still under development and is not supported.
 
 > Compatibility and axis mapping may vary depending on the exact controller model and hardware revision.
 
@@ -52,27 +52,22 @@ The project aims to provide a simple interface for checking controller inputs an
 
 ## ✨ Features
 
-### New in v1.2.0
-
-These changes have been built; real-hardware testing is still pending.
-
-- Dark interface palette, with a clearer layout of the device list and the information panel.
-- DualShock 4 and Xbox controller illustrations on the home screen and in the controller cards.
-- Controller name deduced from its VID/PID for integrated profiles, instead of the generic Windows name (for example "HID-compliant game controller" over Bluetooth).
-- New **Cache** category in Settings: saved profiles, logs, and miscellaneous settings, each with its stored size, and a warning before deletion.
-- Interface language selection (French or English) in Settings; the new language is applied after restarting InputOS.
-- When an official profile applies to a controller, its temporary local profile is moved to an `archive` folder instead of being deleted.
-- The Xbox/Guide button is no longer requested in the **Suggest Controller** workflow for Xbox controllers.
-
-The Nintendo Switch Pro controller is still under development and has not been validated: it is not supported.
-
-### New in v1.1.1
-
 - Integrated DualSense profile (`054C:0CE6`) for USB and Bluetooth, including microphone and touchpad button reading.
 - Integrated Xbox Series S/X USB profile (`045E:0B12`), based on two matching controller diagnostics.
 - Named inputs in the tester, with joystick axes, analog triggers, stick clicks, and D-Pad mappings supplied by the integrated profiles.
 - Redesigned PlayStation and Xbox diagrams in the button configuration workflow: improved silhouettes, balanced control placement, and live button highlighting.
 - Vector PlayStation symbols, an updated touchpad, and Xbox button colors and control icons.
+- Dark interface palette, with a clearer layout of the device list and the information panel.
+- DualShock 4 and Xbox controller illustrations on the home screen and in the controller cards.
+- Controller names deduced from the VID/PID of integrated profiles, instead of the generic Windows name (for example "HID-compliant game controller" over Bluetooth).
+- Interface language selection (French or English) in Settings; the new language is applied after restarting InputOS.
+- Suggest Controller no longer requires a USB cable: Bluetooth and wireless connections are detected and stored in the profile.
+- Free configuration mode for hardware that is not listed: move an input and InputOS shows which one changed, then name it, ignore it, or mark it as absent. No step is mandatory.
+- Controller types: game controller, arcade stick, wheel, joystick or HOTAS, RC transmitter or drone controller, and other, each with its own vector illustration.
+- Local profile format v2: controller type, real connection, any number of axes (including throttles without a center), axis names, inversion, and dead zone. Profiles saved with v1.2.0 and earlier remain readable.
+- Diagnostic submission shows a preview of the exact data before sending, always shows the result, and explains why the service refused a profile.
+- Input readers are chosen per controller model, with the standard Windows reading as a fallback.
+- Drop-down menus and check boxes use the dark style of the application.
 
 The Xbox Series S/X profile includes 16 mapped commands. **Xbox/Guide and Share are unavailable in the submitted diagnostics** and are listed as unavailable in the tester.
 
@@ -91,8 +86,9 @@ The guided workflow includes:
 - Trigger and stick-click mapping, including L3/R3.
 - DualSense microphone button detection.
 - A controller diagram adapted to the selected model and live feedback for mapped inputs.
+- The Xbox/Guide button is not requested for Xbox controllers.
 
-**A wired USB connection is required for configuration and use of local profiles.** Displayed values during configuration are approximate and will be refined when the official profile is validated by the developers.
+Configuration works over USB, Bluetooth, or wireless connections. Local profiles are stored per connection: a profile saved over USB is not applied over Bluetooth. Displayed values during configuration are approximate and will be refined when the official profile is validated by the developers.
 
 ### Local Profiles
 
@@ -106,11 +102,25 @@ InputOS loads compatible local profiles so you can use the controller tester whi
 
 Canceling an unfinished configuration discards its temporary configuration data.
 
+When an official profile applies to a controller, its temporary local profile is moved to an `archive` folder instead of being deleted.
+
 ### Diagnostic Submission
 
 Use **Send Diagnostic** to submit the controller configuration directly from InputOS. No browser or manual GitHub issue creation is required.
 
 The diagnostic service creates a public GitHub issue to help developers review the proposed profile. Diagnostics contain controller identifiers and input mappings; Windows device names and device paths are excluded.
+
+Before sending, InputOS shows the exact data that will be transmitted, and you can cancel. A short local log of send attempts (date, VID/PID, and result; no account name, device path, or IP address) is kept in `%APPDATA%\InputOS`.
+
+### Settings Cache
+
+The **Cache** category in Settings lets you manage:
+
+- Saved profiles
+- Logs
+- Miscellaneous settings
+
+Each item displays its stored size, and a warning is shown before deletion.
 
 ### Automatic Updates
 
@@ -206,18 +216,18 @@ section of this repository.
 Then run:
 
 ```text
-InputOS-Setup-v1.2.0.exe
+InputOS-Setup-v1.2.1.exe
 ```
 
 ### Upgrading from v1.0.0
 
-Close InputOS using its system tray icon before running `InputOS-Setup-v1.2.0.exe`.
+Close InputOS using its system tray icon before running `InputOS-Setup-v1.2.1.exe`.
 
-The migration installer detects the previous installation and offers to remove it before installing v1.2.0 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
+The migration installer detects the previous installation and offers to remove it before installing v1.2.1 with automatic updates. Your settings and profiles in `Documents\InputOS\profils` are preserved.
 
-### Updating from v1.1.1
+### Updating from v1.2.0 or v1.1.1
 
-Once v1.2.0 and its update packages are published in a stable GitHub release, installed copies of v1.1.1 can download the update automatically. The downloaded update is applied on the next launch. You can also check for updates in Settings or run the v1.2.0 installer manually.
+Once v1.2.1 and its update packages are published in a stable GitHub release, installed copies of v1.2.0 and v1.1.1 can download the update automatically. The downloaded update is applied on the next launch. You can also check for updates in Settings or run the v1.2.1 installer manually.
 
 The portable version is available as `InputOS-win-Portable.zip` and must be updated manually.
 
@@ -225,4 +235,4 @@ The portable version is available as `InputOS-win-Portable.zip` and must be upda
 
 ## Planned
 
-**Manual Detection** is planned for a later version and is not included in v1.2.0.
+**Manual Detection** is planned for a later version and is not included in v1.2.1.

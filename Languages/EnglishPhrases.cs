@@ -186,6 +186,7 @@ internal static class EnglishPhrases
         ["Mises à jour automatiques au démarrage."] = "Automatic updates at startup.",
         ["Cette copie utilise l’ancien installateur ou le mode développement. Installez la version avec mises à jour automatiques pour activer cette fonction."] = "This copy uses the old installer or development mode. Install the version with automatic updates to enable this feature.",
         ["Recherche d’une mise à jour…"] = "Checking for an update…",
+        ["Recherche d’une mise à jour (source de secours)…"] = "Checking for an update (fallback source)…",
         ["Mise à jour prête. Elle sera installée au prochain lancement d’InputOS."] = "Update ready. It will be installed the next time InputOS starts.",
         ["InputOS est à jour."] = "InputOS is up to date.",
         ["Téléchargement de la mise à jour…"] = "Downloading the update…",
