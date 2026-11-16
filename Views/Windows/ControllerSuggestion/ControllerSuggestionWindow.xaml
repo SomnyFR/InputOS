@@ -62,72 +62,6 @@
                 <Setter Property="CaretBrush" Value="{DynamicResource AppForegroundBrush}"/>
                 <Setter Property="Padding" Value="10,8"/>
             </Style>
-
-            <Style TargetType="ComboBoxItem">
-                <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
-                <Setter Property="Padding" Value="10,8"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ComboBoxItem">
-                            <Border x:Name="ItemBorder" Background="Transparent" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsHighlighted" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AppCardHoverBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="#0E4A5C"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style TargetType="ComboBox">
-                <Setter Property="Foreground" Value="{DynamicResource AppForegroundBrush}"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ComboBox">
-                            <Grid>
-                                <ToggleButton x:Name="DropDownToggle"
-                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                              ClickMode="Press" Focusable="False">
-                                    <ToggleButton.Template>
-                                        <ControlTemplate TargetType="ToggleButton">
-                                            <Border Background="{DynamicResource AppCardHoverBrush}"
-                                                    BorderBrush="{DynamicResource AppBorderBrush}"
-                                                    BorderThickness="1" CornerRadius="8">
-                                                <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
-                                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
-                                                           HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                           Margin="0,0,12,0"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </ToggleButton.Template>
-                                </ToggleButton>
-                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
-                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                  Margin="12,9,34,9" VerticalAlignment="Center"
-                                                  IsHitTestVisible="False"/>
-                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                       AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                                    <Border Background="{DynamicResource AppCardBrush}"
-                                            BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1"
-                                            CornerRadius="8" Margin="0,4,0,0"
-                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                            MaxHeight="300">
-                                        <ScrollViewer>
-                                            <ItemsPresenter/>
-                                        </ScrollViewer>
-                                    </Border>
-                                </Popup>
-                            </Grid>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
         </Grid.Resources>
 
         <Grid.RowDefinitions>
@@ -155,7 +89,7 @@
                        TextWrapping="Wrap"
                        Margin="0,0,0,8"/>
 
-            <TextBlock Text="Choisissez un modèle, ou indiquez son nom avec « Autre modèle ». Gardez le câble USB branché."
+            <TextBlock Text="Choisissez un modèle, ou indiquez son nom avec « Autre modèle ». Gardez la manette connectée."
                        TextWrapping="Wrap"
                        Margin="0,0,0,15"/>
 
@@ -164,9 +98,19 @@
                        Foreground="{DynamicResource AppSecondaryTextBrush}"
                        Margin="0,0,0,15"/>
 
+            <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,15">
+                <StackPanel>
+                    <Image x:Name="OtherHardwareImage" Height="70" Stretch="Uniform" HorizontalAlignment="Left" Margin="0,0,0,10"/>
+                    <TextBlock Text="Votre matériel n’est pas une manette de la liste ?" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Volant, joystick, radiocommande de drone, stick arcade… : la configuration libre décrit n’importe quel matériel, entrée par entrée."
+                               TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryTextBrush}" Margin="0,0,0,10"/>
+                    <Button Content="Configuration libre (autre matériel)" HorizontalAlignment="Left"
+                            Click="OtherHardwareButton_Click"/>
+                </StackPanel>
+            </Border>
+
             <TextBlock Text="Modèle de la manette" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <ComboBox x:Name="ControllerModelComboBox"
-                      Padding="8,5"
                       Background="{DynamicResource AppPanelBrush}"
                       Foreground="{DynamicResource AppForegroundBrush}"
                       BorderBrush="{DynamicResource AppBorderBrush}"
@@ -221,7 +165,7 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="1. Lire les informations" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                    <TextBlock Text="Posez la manette au repos, avec son câble USB branché."
+                    <TextBlock Text="Posez la manette au repos, en la gardant connectée."
                                TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <Button x:Name="AutoDetectButton" Content="Détecter automatiquement"
                             HorizontalAlignment="Left" Padding="18,11"
@@ -241,7 +185,7 @@
              ========================================================================= -->
         <StackPanel x:Name="DetectionLoadingPanel" Visibility="Collapsed" Margin="0,40,0,0">
             <TextBlock Text="Détection en cours…" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,12"/>
-            <TextBlock Text="Lecture des informations de votre manette. Gardez le câble USB branché."
+            <TextBlock Text="Lecture des informations de votre manette. Gardez la manette connectée."
                        TextWrapping="Wrap" Margin="0,0,0,20"/>
             <ProgressBar Height="8" IsIndeterminate="True"
                          Foreground="{DynamicResource AppAccentBrush}"/>

@@ -23,6 +23,8 @@ public class AppSettings
 
     public bool SkipDeleteSettingsWarning { get; set; }
 
+    public bool SkipDeleteLogsWarning { get; set; }
+
 
     // ============================================================================
     // FIN FONCTIONNALITÉ : PARAMÈTRES DE L'APPLICATION

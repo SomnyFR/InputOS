@@ -118,7 +118,7 @@
                  FONCTIONNALITÉ : TEST DES STICKS
                  ========================================================================= -->
 
-            <Border Style="{StaticResource CardStyle}">
+            <Border x:Name="SticksCard" Style="{StaticResource CardStyle}">
 
                 <StackPanel>
 
@@ -246,7 +246,17 @@
 
 
 
-            <Grid>
+            <!-- Profil « Autre » : entrées nommées génériques, sans schéma de manette. -->
+            <Image x:Name="ProfileTypeImage" Visibility="Collapsed" Height="120" Stretch="Uniform" Margin="0,0,0,16"/>
+
+            <Border x:Name="NamedAxesCard" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="AXES NOMMÉS" Style="{StaticResource SectionTitleStyle}"/>
+                    <StackPanel x:Name="NamedAxesPanel"/>
+                </StackPanel>
+            </Border>
+
+            <Grid x:Name="AxesDPadGrid">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>

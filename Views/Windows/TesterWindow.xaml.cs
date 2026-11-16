@@ -22,9 +22,9 @@ public partial class TesterWindow : Window
 
     private readonly RawGameController controller;
     private readonly ControllerLocalProfile? inputProfile;
-    private readonly DualSenseMicrophoneReader? localMicrophone;
-    private readonly NintendoProControllerReader? nintendoReader;
-    private readonly long nintendoStartedAt = Environment.TickCount64;
+    private readonly IControllerInputReader reader;
+    private bool? microphonePressed;
+    private readonly long readerStartedAt = Environment.TickCount64;
 
     private readonly DispatcherTimer inputTimer;
 
@@ -53,9 +53,11 @@ public partial class TesterWindow : Window
         controller = selectedController;
         inputProfile = DualSenseProfileService.Load(controller) ?? XboxSeriesProfileService.Load(controller)
             ?? ControllerLocalProfileService.Load(controller);
-        if (inputProfile != null) localMicrophone = new DualSenseMicrophoneReader(controller);
-        if (inputProfile != null && NintendoProControllerReader.IsSupported(controller))
-            nintendoReader = new NintendoProControllerReader(controller);
+        // Lecteur choisi par modèle et connexion (profil connu), sinon lecture Windows brute.
+        // Un échec du lecteur spécifique retombe sur la lecture brute (avertissement dans le titre).
+        string? readerWarning = null;
+        reader = inputProfile != null ? ControllerReaderFactory.Create(controller, out readerWarning)
+            : ControllerReaderFactory.CreateRaw(controller);
 
 
         buttonValues =
@@ -71,8 +73,11 @@ public partial class TesterWindow : Window
 
 
         InitializeControllerInformation();
+        if (readerWarning != null) Title += " - " + readerWarning;
 
         CreateButtonIndicators();
+
+        CreateNamedAxes();
 
 
         inputTimer = new DispatcherTimer
@@ -311,32 +316,30 @@ public partial class TesterWindow : Window
 
         try
         {
-            if (nintendoReader != null)
+            if (reader.Read() is not { } reading)
             {
-                if (nintendoReader.Reading is not { } reading)
-                {
-                    Array.Clear(buttonValues);
-                    Array.Fill(switchValues, GameControllerSwitchPosition.Center);
-                    UpdateButtons();
-                    CenterStickPoints();
-                    if (Environment.TickCount64 - nintendoStartedAt < 4500) return;
-                    inputTimer.Stop();
-                    Title = Tr("InputOS - Lecture Nintendo indisponible : rebranchez la manette en USB");
-                    return;
-                }
-                Array.Copy(reading.ButtonStates, buttonValues, buttonValues.Length);
-                Array.Copy(reading.AxisValues, axisValues, axisValues.Length);
-                for (int i = 0; i < switchValues.Length; i++)
-                    switchValues[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+                // Lecture périmée : jamais présentée comme actuelle. Le profil Nintendo HID ne vaut pas pour
+                // les entrées Windows brutes, donc pas de repli ici : message et arrêt.
+                Array.Clear(buttonValues);
+                Array.Fill(switchValues, GameControllerSwitchPosition.Center);
+                microphonePressed = null;
+                UpdateButtons();
+                CenterStickPoints();
+                if (Environment.TickCount64 - readerStartedAt < 4500) return;
+                inputTimer.Stop();
+                Title = Tr("InputOS - Lecture Nintendo indisponible : rebranchez la manette en USB");
+                return;
             }
-            else
-            {
-                controller.GetCurrentReading(buttonValues, switchValues, axisValues);
-            }
+            Array.Copy(reading.ButtonStates, buttonValues, Math.Min(reading.ButtonStates.Length, buttonValues.Length));
+            Array.Copy(reading.AxisValues, axisValues, Math.Min(reading.AxisValues.Length, axisValues.Length));
+            for (int i = 0; i < switchValues.Length && i < reading.SwitchPositions.Length; i++)
+                switchValues[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
+            microphonePressed = reading.MicrophonePressed;
 
             // En Bluetooth, le rapport HID complet fournit les commandes supplémentaires
             // et un ordre d'axes indépendant du mode de rapport Windows.
-            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless && localMicrophone?.Reading is { } hid)
+            if (inputProfile?.ValidatedByInputOS == true && controller.IsWireless &&
+                (reader as DualSenseControllerReader)?.HidReading is { } hid)
             {
                 Array.Copy(hid.ButtonStates, buttonValues, Math.Min(hid.ButtonStates.Length, buttonValues.Length));
                 Array.Copy(hid.AxisValues, axisValues, axisValues.Length);
@@ -350,6 +353,8 @@ public partial class TesterWindow : Window
             UpdateSticks();
 
             UpdateDPad();
+
+            UpdateNamedAxes();
         }
         catch
         {
@@ -382,12 +387,55 @@ public partial class TesterWindow : Window
     // LOGIQUE
     // ---------------------------------------------------------------------------
 
+    // Profils « Autre » : les axes nommés s'affichent en liste, et le schéma de manette est masqué hors type « Gamepad ».
+    private readonly List<(JoystickAxisConfiguration Axis, System.Windows.Controls.ProgressBar Bar, TextBlock Value)> namedAxes = [];
+
+    private void CreateNamedAxes()
+    {
+        if (inputProfile == null) return;
+        if (inputProfile.ControllerType != "Gamepad")
+        {
+            ControllerTypeIllustrationService.UpdateImage(ProfileTypeImage, inputProfile.ControllerType);
+            ProfileTypeImage.Visibility = Visibility.Visible;
+            SticksCard.Visibility = Visibility.Collapsed;
+            AxesDPadGrid.Visibility = Visibility.Collapsed;
+        }
+        foreach (var axis in inputProfile.Joysticks.AllAxes().Where(a => a.Name != null).OrderBy(a => a.AxisIndex))
+        {
+            var bar = new System.Windows.Controls.ProgressBar { Minimum = -1, Maximum = 1, Height = 10, Margin = new Thickness(0, 0, 12, 0) };
+            var value = new TextBlock { Width = 60, TextAlignment = TextAlignment.Right };
+            var line = new Grid { Margin = new Thickness(0, 4, 0, 4) };
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+            line.ColumnDefinitions.Add(new ColumnDefinition());
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var label = new TextBlock { Text = axis.Name };
+            Grid.SetColumn(bar, 1);
+            Grid.SetColumn(value, 2);
+            line.Children.Add(label);
+            line.Children.Add(bar);
+            line.Children.Add(value);
+            NamedAxesPanel.Children.Add(line);
+            namedAxes.Add((axis, bar, value));
+        }
+        if (namedAxes.Count > 0) NamedAxesCard.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateNamedAxes()
+    {
+        foreach (var (axis, bar, value) in namedAxes)
+        {
+            double v = axis.AxisIndex < axisValues.Length ? axis.Normalize(axisValues[axis.AxisIndex]) : 0;
+            bar.Value = v;
+            value.Text = v.ToString("0.000");
+        }
+    }
+
     private void UpdateButtons()
     {
         var reading = inputProfile == null ? null : new ControllerDetectionResult(inputProfile.Model,
             inputProfile.VendorId, inputProfile.ProductId, false, false, Array.Empty<string>(),
             buttonValues, axisValues, switchValues.Select(value => value.ToString()).ToArray())
-            { MicrophonePressed = localMicrophone?.Pressed };
+            { MicrophonePressed = microphonePressed };
         for (int i = 0; i < buttonIndicators.Count; i++)
         {
             bool pressed = reading == null ? buttonValues[i] : ControllerButtonStateService.IsPressed(inputProfile!.Buttons.Mappings[i], reading);
@@ -455,8 +503,8 @@ public partial class TesterWindow : Window
     private ControllerAxisMapping GetAxisMapping()
     {
         if (inputProfile != null)
-            return new(inputProfile.Joysticks.LeftX.AxisIndex, inputProfile.Joysticks.LeftY.AxisIndex,
-                inputProfile.Joysticks.RightX.AxisIndex, inputProfile.Joysticks.RightY.AxisIndex,
+            return new(inputProfile.Joysticks.LeftX?.AxisIndex ?? -1, inputProfile.Joysticks.LeftY?.AxisIndex ?? -1,
+                inputProfile.Joysticks.RightX?.AxisIndex ?? -1, inputProfile.Joysticks.RightY?.AxisIndex ?? -1,
                 inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "LeftTrigger" && m.InputType == "Axis")?.InputIndex ?? -1,
                 inputProfile.Buttons.Mappings.FirstOrDefault(m => m.Id == "RightTrigger" && m.InputType == "Axis")?.InputIndex ?? -1);
         if (controller.HardwareVendorId ==
@@ -581,8 +629,8 @@ public partial class TesterWindow : Window
             axisValues[axisIndex];
         if (inputProfile != null)
         {
-            var axis = new[] { inputProfile.Joysticks.LeftX, inputProfile.Joysticks.LeftY,
-                inputProfile.Joysticks.RightX, inputProfile.Joysticks.RightY }.First(a => a.AxisIndex == axisIndex);
+            var axis = inputProfile.Joysticks.AllAxes().FirstOrDefault(a => a.AxisIndex == axisIndex);
+            if (axis == null) return (rawValue * 2.0) - 1.0;
             double value = axis.Normalize(rawValue);
             return axis == inputProfile.Joysticks.LeftY || axis == inputProfile.Joysticks.RightY ? -value : value;
         }
@@ -868,8 +916,7 @@ public partial class TesterWindow : Window
         object? sender,
         EventArgs e)
     {
-        localMicrophone?.Dispose();
-        nintendoReader?.Dispose();
+        reader.Dispose();
         inputTimer.Stop();
 
         inputTimer.Tick -=

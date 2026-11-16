@@ -19,16 +19,26 @@ public sealed class JoystickConfigurationService
     private double positiveEnd;
     private readonly List<JoystickAxisConfiguration> axes = new();
 
+    // Un stick = une paire X/Y. Moins de 4 axes : un seul stick (2 à 3 axes) ou aucun (0 à 1 axe).
+    public int StickCount { get; }
+
+    public int TotalSteps => StickCount * 5;
+
     public int Step { get; private set; }
 
-    public bool IsComplete => Step == 10;
+    public bool IsComplete => Step == TotalSteps;
+
+    public JoystickConfigurationService(int axisCount = 4) =>
+        StickCount = axisCount >= 4 ? 2 : axisCount >= 2 ? 1 : 0;
 
     public JoystickConfiguration? Result { get; private set; }
 
     public string Instruction => IsComplete
-        ? Tr("Les deux joysticks sont identifiés. Bougez-les pour vérifier les valeurs.")
+        ? Tr(StickCount == 1 ? "Le joystick est identifié. Bougez-le pour vérifier les valeurs."
+            : "Les deux joysticks sont identifiés. Bougez-les pour vérifier les valeurs.")
         : (Step % 5) switch
         {
+            0 when StickCount == 1 => Tr("Relâchez le joystick, puis validez sa position au repos."),
             0 => Tf("Relâchez les deux joysticks, puis validez leur position au repos ({0}).", Tr(StickName)),
             1 => Tf("Maintenez le joystick {0} complètement à DROITE (X), puis validez.", Tr(StickName)),
             2 => Tf("Maintenez le joystick {0} complètement à GAUCHE (X), puis validez.", Tr(StickName)),
@@ -56,7 +66,7 @@ public sealed class JoystickConfigurationService
         }
 
         int count = samples[0].Length;
-        if (count < 4 || samples.Any(sample => sample.Length != count ||
+        if (count < StickCount * 2 || samples.Any(sample => sample.Length != count ||
             sample.Any(value => !double.IsFinite(value))))
         {
             throw new InvalidOperationException(Tr("Les données des axes ne permettent pas ce test."));
@@ -127,8 +137,24 @@ public sealed class JoystickConfigurationService
 
         if (IsComplete)
         {
-            Result = new JoystickConfiguration(axes[0], axes[1], axes[2], axes[3]);
+            Result = Build(center!, axes);
         }
+    }
+
+    // Les axes hors sticks (gâchettes, gaz, curseurs…) sont repris au repos avec la plage nominale 0..1 de Windows.
+    // shortcut: type « Slider » par défaut, sans calibration de la course ; le choix du type viendra avec la détection libre.
+    public static JoystickConfiguration Build(double[] rest, IReadOnlyList<JoystickAxisConfiguration> sticks)
+    {
+        var used = sticks.Select(axis => axis.AxisIndex).ToHashSet();
+        var extra = Enumerable.Range(0, rest.Length).Where(index => !used.Contains(index)).Select(index =>
+        {
+            double center = Math.Clamp(rest[index], 0, 1);
+            bool up = center <= .5;
+            return new JoystickAxisConfiguration(index, center, up ? 1 : 0, up ? 0 : 1) { Type = "Slider" };
+        }).ToArray();
+        return new JoystickConfiguration(
+            sticks.ElementAtOrDefault(0), sticks.ElementAtOrDefault(1),
+            sticks.ElementAtOrDefault(2), sticks.ElementAtOrDefault(3)) { Axes = extra };
     }
 
     // ============================================================================

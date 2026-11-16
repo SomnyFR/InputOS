@@ -91,7 +91,7 @@ public partial class SettingsWindow : Window
         catch (Exception) { }
 
         ProfilesSizeText.Text = FormatSize(profiles);
-        LogsSizeText.Text = FormatSize(0);
+        LogsSizeText.Text = FormatSize(DiagnosticLogService.GetSize());
         SettingsSizeText.Text = FormatSize(SettingsService.GetSize());
     }
 
@@ -161,6 +161,17 @@ public partial class SettingsWindow : Window
         RefreshCacheSizes();
     }
 
+    private void DeleteLogsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!Confirm(settings.SkipDeleteLogsWarning, Tr("le journal des envois de diagnostics"), v => settings.SkipDeleteLogsWarning = v))
+            return;
+
+        try { DiagnosticLogService.Delete(); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "InputOS", MessageBoxButton.OK, MessageBoxImage.Warning); }
+
+        RefreshCacheSizes();
+    }
+
     private void DeleteSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         if (!Confirm(settings.SkipDeleteSettingsWarning, Tr(Tr("les paramètres (settings.json)")), v => settings.SkipDeleteSettingsWarning = v))
@@ -174,6 +185,7 @@ public partial class SettingsWindow : Window
         settings.Language = new AppSettings().Language;
         settings.SkipDeleteProfilesWarning = false;
         settings.SkipDeleteSettingsWarning = false;
+        settings.SkipDeleteLogsWarning = false;
         LoadSettingsIntoInterface();
     }
 

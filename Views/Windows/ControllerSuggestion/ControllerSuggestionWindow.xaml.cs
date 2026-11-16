@@ -63,7 +63,9 @@ public partial class ControllerSuggestionWindow : Window
     private System.Threading.CancellationTokenSource? detectionCancellation;
 
     private bool isClosed;
-    private NintendoProControllerReader? nintendoReader;
+    // Lecteur choisi par ControllerReaderFactory, commun à toutes les étapes du parcours.
+    private IControllerInputReader? inputReader;
+    private string? readerWarning;
 
     private ControllerButtonConfigurationService? buttonTest;
     private ControllerButtonDefinition[] buttonDefinitions = Array.Empty<ControllerButtonDefinition>();
@@ -83,6 +85,7 @@ public partial class ControllerSuggestionWindow : Window
 
 
         InitializeComponent();
+        ControllerTypeIllustrationService.UpdateImage(OtherHardwareImage, "Other");
 
 
         liveInputTimer.Tick +=
@@ -104,6 +107,23 @@ public partial class ControllerSuggestionWindow : Window
                 .Where(model => model == OtherModel ||
                     !ControllerCompatibilityService.HasValidatedModel(model))
                 .ToArray();
+    }
+
+
+    // Voie « Autre » : configuration libre dans sa propre fenêtre ; la voie par manette ci-dessous reste inchangée.
+    private void OtherHardwareButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (!EnsureControllerConnected())
+        {
+            return;
+        }
+
+        if (new OtherControllerWindow(SelectedController) { Owner = this }.ShowDialog() == true)
+        {
+            Close();
+        }
     }
 
 
@@ -161,6 +181,7 @@ public partial class ControllerSuggestionWindow : Window
                     SelectedController.HardwareVendorId,
                     SelectedController.HardwareProductId)
                 {
+                    Connection = ControllerLocalProfileService.GetConnection(SelectedController),
                     Detection = previousDetection,
                     Joysticks = previousJoysticks,
                     Buttons = sameModel ? previousButtons : null
@@ -197,7 +218,7 @@ public partial class ControllerSuggestionWindow : Window
         object sender,
         RoutedEventArgs e)
     {
-        if (PendingConfiguration == null || !EnsureWiredConnection())
+        if (PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -320,36 +341,18 @@ public partial class ControllerSuggestionWindow : Window
 
         try
         {
-            if (SelectedController.IsWireless ||
-                !RawGameController.RawGameControllers.Contains(SelectedController))
+            if (!RawGameController.RawGameControllers.Contains(SelectedController))
             {
                 throw new InvalidOperationException(Tr("Manette déconnectée."));
             }
 
 
-            GameControllerSwitchPosition[] switches =
-                new GameControllerSwitchPosition[result.SwitchPositions.Length];
-
-
-            if (nintendoReader != null)
-            {
-                var reading = nintendoReader.Reading ?? throw new InvalidOperationException(Tr("Lecture Nintendo interrompue."));
-                Array.Copy(reading.ButtonStates, result.ButtonStates, result.ButtonStates.Length);
-                Array.Copy(reading.AxisValues, result.AxisValues, result.AxisValues.Length);
-                for (int i = 0; i < switches.Length; i++)
-                    switches[i] = Enum.Parse<GameControllerSwitchPosition>(reading.SwitchPositions[i]);
-            }
-            else
-            {
-                SelectedController.GetCurrentReading(result.ButtonStates, switches, result.AxisValues);
-            }
-
-
-            for (int i = 0; i < switches.Length; i++)
-            {
-                result.SwitchPositions[i] =
-                    switches[i].ToString();
-            }
+            // Une lecture périmée n'est jamais présentée comme actuelle : elle interrompt la lecture.
+            ControllerDetectionResult reading = inputReader?.Read() ??
+                throw new InvalidOperationException(Tr("Lecture interrompue."));
+            Array.Copy(reading.ButtonStates, result.ButtonStates, Math.Min(reading.ButtonStates.Length, result.ButtonStates.Length));
+            Array.Copy(reading.AxisValues, result.AxisValues, Math.Min(reading.AxisValues.Length, result.AxisValues.Length));
+            Array.Copy(reading.SwitchPositions, result.SwitchPositions, Math.Min(reading.SwitchPositions.Length, result.SwitchPositions.Length));
 
 
             if (joystickTest != null)
@@ -368,7 +371,7 @@ public partial class ControllerSuggestionWindow : Window
 
             if (ButtonConfigurationPanel.Visibility == Visibility.Visible)
             {
-                UpdateButtonTestReading(result);
+                UpdateButtonTestReading(result with { MicrophonePressed = reading.MicrophonePressed });
             }
             else if (JoystickConfigurationPanel.Visibility == Visibility.Visible)
             {
@@ -396,7 +399,7 @@ public partial class ControllerSuggestionWindow : Window
 
 
             AutoDetectionResultText.Text =
-                Tr("Lecture interrompue. Rebranchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS.");
+                Tr("Lecture interrompue. Reconnectez la manette (câble ou Bluetooth). Si nécessaire, annulez et sélectionnez-la de nouveau dans InputOS.");
 
             DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -422,14 +425,15 @@ public partial class ControllerSuggestionWindow : Window
             Visibility.Visible;
 
         StartJoystickTestButton.IsEnabled =
-            joystickTest == null && result.AxisValues.Length >= 4;
+            joystickTest == null;
 
 
         AutoDetectionResultText.Text =
             Tf("Lecture en direct · {0} boutons · {1} axes\n", result.ButtonLabels.Length, result.AxisValues.Length) +
             (result.HasStandardGamepad
                 ? Tr("Commandes standard reconnues par Windows.")
-                : Tr("Certaines commandes devront être identifiées manuellement."));
+                : Tr("Certaines commandes devront être identifiées manuellement.")) +
+            (readerWarning == null ? "" : "\n" + readerWarning);
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
@@ -450,7 +454,7 @@ public partial class ControllerSuggestionWindow : Window
                 JoystickAxisConfiguration? configuredAxis =
                     GetConfiguredJoystickAxis(index);
 
-                bool isJoystick = configuredAxis != null ||
+                bool isJoystick = configuredAxis?.Type == "Stick" ||
                     ControllerAutoDetectionService.IsJoystickAxis(
                         result.VendorId,
                         result.ProductId,
@@ -515,7 +519,7 @@ public partial class ControllerSuggestionWindow : Window
         ClearLiveCommands();
 
 
-        if (PendingConfiguration == null || !EnsureWiredConnection())
+        if (PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -536,24 +540,34 @@ public partial class ControllerSuggestionWindow : Window
 
         try
         {
-            if (nintendoReader != null) await nintendoReader.StopAsync();
+            await StopInputReaderAsync();
             token.ThrowIfCancellationRequested();
-            nintendoReader = NintendoProControllerReader.IsSupported(SelectedController)
-                ? new NintendoProControllerReader(SelectedController) : null;
-            NintendoProControllerReader? reader = nintendoReader;
-            Task<ControllerDetectionResult> detection = Task.Run(
-                () => reader != null ? reader.WaitForReading(token)
-                    : ControllerAutoDetectionService.Detect(SelectedController), token);
+            // Lecteur choisi selon le modèle et la connexion ; repli sur la lecture Windows brute avec avertissement.
+            Task<(IControllerInputReader Reader, ControllerDetectionResult First, string? Warning)> detection = Task.Run(
+                () => ControllerReaderFactory.Open(SelectedController, token), token);
 
-            await Task.WhenAll(detection, Task.Delay(450, token));
-            token.ThrowIfCancellationRequested();
-
-            if (isClosed || PendingConfiguration == null || !EnsureWiredConnection())
+            try
             {
+                await Task.WhenAll(detection, Task.Delay(450, token));
+            }
+            catch
+            {
+                // Annulation ou échec : ne jamais laisser un lecteur ouvert sans propriétaire.
+                if (detection.IsCompletedSuccessfully) detection.Result.Reader.Dispose();
+                throw;
+            }
+            token.ThrowIfCancellationRequested();
+
+            var opened = await detection;
+            if (isClosed || PendingConfiguration == null || !EnsureControllerConnected())
+            {
+                opened.Reader.Dispose();
                 return;
             }
 
-            ControllerDetectionResult result = await detection;
+            inputReader = opened.Reader;
+            readerWarning = opened.Warning;
+            ControllerDetectionResult result = opened.First;
 
 
             PendingConfiguration =
@@ -573,8 +587,7 @@ public partial class ControllerSuggestionWindow : Window
         }
         catch (Exception)
         {
-            if (nintendoReader != null) await nintendoReader.StopAsync();
-            nintendoReader = null;
+            await StopInputReaderAsync();
             if (!isClosed)
             {
                 if (PendingConfiguration != null)
@@ -582,7 +595,7 @@ public partial class ControllerSuggestionWindow : Window
                     PendingConfiguration = PendingConfiguration with { Detection = null };
                 }
                 AutoDetectionResultText.Text =
-                    Tr("Impossible de lire la manette. Rebranchez-la en USB et fermez les autres logiciels de manette, puis réessayez.");
+                    Tr("Impossible de lire la manette. Reconnectez-la et fermez les autres logiciels de manette, puis réessayez.");
             }
         }
         finally
@@ -608,13 +621,21 @@ public partial class ControllerSuggestionWindow : Window
 
 
     // ============================================================================
-    // FONCTIONNALITÉ : CONNEXION FILAIRE REQUISE
+    // FONCTIONNALITÉ : MANETTE CONNECTÉE REQUISE
     // ============================================================================
 
-    private bool EnsureWiredConnection()
+    // Libère le lecteur en attendant la fermeture du flux HID Nintendo avant une nouvelle ouverture.
+    private async Task StopInputReaderAsync()
     {
-        if (!SelectedController.IsWireless &&
-            RawGameController.RawGameControllers.Contains(SelectedController))
+        IControllerInputReader? reader = inputReader;
+        inputReader = null;
+        if (reader is NintendoProControllerReader nintendo) await nintendo.StopAsync();
+        else reader?.Dispose();
+    }
+
+    private bool EnsureControllerConnected()
+    {
+        if (RawGameController.RawGameControllers.Contains(SelectedController))
         {
             return true;
         }
@@ -634,15 +655,15 @@ public partial class ControllerSuggestionWindow : Window
 
 
         AutoDetectionResultText.Text =
-            Tr("La manette doit être connectée avec un câble USB pour poursuivre.");
+            Tr("La manette est déconnectée. Reconnectez-la pour poursuivre.");
 
         DetectionStatusText.Text = AutoDetectionResultText.Text;
 
 
         MessageBox.Show(
             this,
-            Tr("Branchez la manette avec un câble USB. Si nécessaire, annulez et sélectionnez sa connexion filaire dans InputOS."),
-            Tr("Connexion filaire requise"),
+            Tr("Reconnectez la manette (câble ou Bluetooth). Si nécessaire, annulez et sélectionnez-la de nouveau dans InputOS."),
+            Tr("Manette déconnectée"),
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 
@@ -651,7 +672,7 @@ public partial class ControllerSuggestionWindow : Window
     }
 
     // ============================================================================
-    // FIN FONCTIONNALITÉ : CONNEXION FILAIRE REQUISE
+    // FIN FONCTIONNALITÉ : MANETTE CONNECTÉE REQUISE
     // ============================================================================
 
 
@@ -669,7 +690,8 @@ public partial class ControllerSuggestionWindow : Window
         System.EventArgs e)
     {
         isClosed = true;
-        nintendoReader?.Dispose();
+        inputReader?.Dispose();
+        inputReader = null;
         diagnosticCancellation.Cancel();
         detectionCancellation?.Cancel();
 
@@ -724,33 +746,44 @@ public partial class ControllerSuggestionWindow : Window
             return null;
         }
 
-        return new[] { configuration.LeftX, configuration.LeftY,
-            configuration.RightX, configuration.RightY }
-            .FirstOrDefault(axis => axis.AxisIndex == index);
+        return configuration.AllAxes().FirstOrDefault(axis => axis.AxisIndex == index);
     }
 
 
     private void StartJoystickTestButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PendingConfiguration?.Detection == null || !EnsureWiredConnection())
+        if (PendingConfiguration?.Detection == null || !EnsureControllerConnected())
         {
             return;
         }
 
         PendingConfiguration = PendingConfiguration with { Joysticks = null, Buttons = null };
         ContinueToButtonsButton.IsEnabled = false;
+        if (PendingConfiguration.Detection.AxisValues.Length < 2)
+        {
+            // Pas de paire X/Y : aucun stick, les axes éventuels sont repris tels quels.
+            PendingConfiguration = PendingConfiguration with
+            {
+                Joysticks = JoystickConfigurationService.Build(PendingConfiguration.Detection.AxisValues, [])
+            };
+            JoystickConfigurationPanel.Visibility = Visibility.Visible;
+            DetectionResultsPanel.Visibility = Visibility.Collapsed;
+            StopJoystickTest();
+            JoystickTestFeedbackText.Text = Tr("Cette manette a moins de deux axes : aucun joystick à calibrer.");
+            return;
+        }
         DetectionResultsPanel.Visibility = Visibility.Collapsed;
         JoystickConfigurationPanel.Visibility = Visibility.Visible;
         ConfigurationScrollViewer.ScrollToTop();
         RestartJoystickTestButton.Visibility = Visibility.Collapsed;
-        joystickTest = new JoystickConfigurationService();
+        joystickTest = new JoystickConfigurationService(PendingConfiguration.Detection.AxisValues.Length);
         joystickSamples.Clear();
         AutoDetectButton.IsEnabled = false;
         StartJoystickTestButton.IsEnabled = false;
         JoystickTestActions.Visibility = Visibility.Visible;
         CaptureJoystickPositionButton.IsEnabled = false;
         JoystickTestFeedbackText.Text = Tr("Maintenez chaque position jusqu’à la validation. Le test comporte deux positions au repos et huit directions.");
-        JoystickInstructionText.Text = Tf("Étape 1 / 10 · {0}", joystickTest.Instruction);
+        JoystickInstructionText.Text = Tf("Étape {0} / {1} · {2}", 1, joystickTest.TotalSteps, joystickTest.Instruction);
         UpdateJoystickVisual(PendingConfiguration.Detection);
         liveInputTimer.Start();
     }
@@ -758,7 +791,7 @@ public partial class ControllerSuggestionWindow : Window
 
     private void CaptureJoystickPositionButton_Click(object sender, RoutedEventArgs e)
     {
-        if (joystickTest == null || PendingConfiguration == null || !EnsureWiredConnection())
+        if (joystickTest == null || PendingConfiguration == null || !EnsureControllerConnected())
         {
             return;
         }
@@ -781,7 +814,7 @@ public partial class ControllerSuggestionWindow : Window
                 return;
             }
 
-            JoystickInstructionText.Text = Tf("Étape {0} / 10 · {1}", joystickTest.Step + 1, joystickTest.Instruction);
+            JoystickInstructionText.Text = Tf("Étape {0} / {1} · {2}", joystickTest.Step + 1, joystickTest.TotalSteps, joystickTest.Instruction);
             UpdateJoystickVisual(PendingConfiguration.Detection);
             JoystickTestFeedbackText.Text = Tr("Position validée. Passez à la direction suivante.");
         }
@@ -815,6 +848,10 @@ public partial class ControllerSuggestionWindow : Window
         ContinueToButtonsButton.IsEnabled = configuration != null;
         JoystickInstructionText.Text = configuration == null
             ? Tr("Commencez le test après la détection de la manette.")
+            : configuration.LeftX == null
+                ? Tr("Aucun joystick à calibrer sur cette manette.")
+            : configuration.RightX == null
+                ? Tf("Joystick : X = axe {0}, Y = axe {1}", configuration.LeftX.AxisIndex, configuration.LeftY!.AxisIndex)
             : Tf("Joystick gauche : X = axe {0}, Y = axe {1}\nJoystick droit : X = axe {2}, Y = axe {3}",
                 configuration.LeftX.AxisIndex, configuration.LeftY.AxisIndex,
                 configuration.RightX.AxisIndex, configuration.RightY.AxisIndex);
@@ -851,8 +888,10 @@ public partial class ControllerSuggestionWindow : Window
             return;
         }
 
-        MoveJoystickPoint(LeftJoystickPosition, configuration.LeftX, configuration.LeftY, reading);
-        MoveJoystickPoint(RightJoystickPosition, configuration.RightX, configuration.RightY, reading);
+        if (configuration.LeftX != null && configuration.LeftY != null)
+            MoveJoystickPoint(LeftJoystickPosition, configuration.LeftX, configuration.LeftY, reading);
+        if (configuration.RightX != null && configuration.RightY != null)
+            MoveJoystickPoint(RightJoystickPosition, configuration.RightX, configuration.RightY, reading);
     }
 
     private static void MoveJoystickPoint(FrameworkElement point,

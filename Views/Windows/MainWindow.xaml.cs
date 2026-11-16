@@ -43,20 +43,16 @@ public partial class MainWindow : Window
                 _ => null
             };
 
-        if (file == null) return null;
-
-        if (!controllerImages.TryGetValue(file, out var image))
+        if (file != null)
         {
-            System.Windows.Media.Imaging.BitmapImage bitmap = new();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri($"pack://application:,,,/InputOS;component/Assets/Images/{file}");
-            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            controllerImages[file] = image = bitmap;
+            if (!controllerImages.TryGetValue(file, out var image))
+                controllerImages[file] = image = ControllerTypeIllustrationService.LoadPng(file);
+            return image;
         }
 
-        return image;
+        // Matériel inconnu : illustration du type d'un profil local, sauf manette de jeu (icône générique).
+        string? type = ControllerLocalProfileService.Load(controller)?.ControllerType;
+        return type is null or "Gamepad" ? null : ControllerTypeIllustrationService.GetImage(type);
     }
 
 
@@ -723,6 +719,13 @@ public partial class MainWindow : Window
                 controller);
 
 
+        if (DeviceImage.Source != null)
+            System.Windows.Automation.AutomationProperties.SetName(
+                DeviceImage,
+                ControllerTypeIllustrationService.GetDescription(
+                    ControllerLocalProfileService.Load(controller)?.ControllerType ?? "Gamepad"));
+
+
         DeviceImage.Visibility =
             DeviceImage.Source == null
                 ? Visibility.Collapsed
@@ -816,13 +819,12 @@ public partial class MainWindow : Window
         }
 
 
-        if (controller.IsWireless ||
-            !RawGameController.RawGameControllers.Contains(controller))
+        if (!RawGameController.RawGameControllers.Contains(controller))
         {
             MessageBox.Show(
                 this,
-                Tr("Pour suggérer cette manette, branchez-la avec un câble USB, puis sélectionnez sa connexion filaire dans InputOS."),
-                Tr("Connexion filaire requise"),
+                Tr("Cette manette n’est plus connectée. Reconnectez-la, puis réessayez."),
+                Tr("Manette déconnectée"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
 
